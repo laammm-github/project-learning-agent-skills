@@ -153,61 +153,6 @@ project-book/
 
 ## 七、使用示例
 
-### 完整学习流程
-
-```
-用户："请帮我学习这个项目"
-
-Agent 调度：
-1. 01-repo-discovery → 01-project-overview.md
-2. 02-config-and-installation → 02-installation.md
-3. 03-architecture-analysis → 03-architecture.md
-4. 04-code-flow-analysis → 04-core-flow.md
-5. 05-concept-extraction → 05-core-concepts.md
-6. 06-tutorial-writer → 整合生成 06-07 章节
-7. 07-example-generator → 08-examples.md
-8. 08-learning-review → 检查清单 + FAQ
-```
-
-### 快速学习流程（只学核心）
-
-```
-用户："快速了解这个项目，我需要知道核心架构和怎么扩展"
-
-Agent 调度：
-1. 01-repo-discovery → 01-project-overview.md
-2. 02-config-and-installation → 02-installation.md
-3. 03-architecture-analysis → 03-architecture.md
-4. 07-example-generator → 08-examples.md（扩展模板）
-```
-
-### 针对性学习
-
-```
-用户："我想理解核心数据流的完整路径"
-
-Agent 调度：
-1. 04-code-flow-analysis → 04-core-flow.md（专注数据流）
-2. 05-concept-extraction → 提取核心抽象
-```
-
----
-
-## 八、质量检查
-
-每个子 Skill 输出前，检查：
-
-```
-✓ 产物是否让新人能看懂？
-✓ 是否有代码示例（而非纯文字）？
-✓ 是否标注了"数据变换"（输入→输出）？
-✓ 是否有关联文件路径（方便深挖）？
-```
-
----
-
-## 九、完整使用示例
-
 ### 场景 1：完整学习一个新项目
 
 ```
@@ -223,19 +168,6 @@ Agent 调度流程：
 6. 06-tutorial-writer → 整合为教学文档，生成 06-source-code-guide.md + 07-extension-guide.md
 7. 07-example-generator → 生成 08-examples.md
 8. 08-learning-review → 生成 09-faq.md + 10-learning-checklist.md
-
-最终产物：
-project-book/
-├── 01-project-overview.md
-├── 02-installation.md
-├── 03-architecture.md
-├── 04-core-flow.md
-├── 05-core-concepts.md
-├── 06-source-code-guide.md
-├── 07-extension-guide.md
-├── 08-examples.md
-├── 09-faq.md
-└── 10-learning-checklist.md
 ```
 
 ### 场景 2：快速了解项目核心
@@ -283,4 +215,16 @@ Agent 调度流程：
 8. 08-learning-review → 10-learning-checklist.md（检查贡献者准备度）
 
 重点：07-extension-guide.md 提供扩展开发方法
+```## 八、质量检查
+
+每个子 Skill 输出前，检查：
+
 ```
+✓ 产物是否让新人能看懂？
+✓ 是否有代码示例（而非纯文字）？
+✓ 是否标注了"数据变换"（输入→输出）？
+✓ 是否有关联文件路径（方便深挖）？
+```
+
+---
+
