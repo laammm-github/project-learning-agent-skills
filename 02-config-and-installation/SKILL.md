@@ -24,11 +24,15 @@ description: 分析配置系统、环境变量映射、安装步骤，生成配�
 ### Step 1：识别配置系统
 
 ```bash
+# 优先使用结构化清单
+python scripts/inventory_repo.py <目标仓库> --config
+
+# 或手动搜索（rg 跨平台）
 # 查找配置文件
-find . -name "config.json" -o -name "config.py" -o -name "config-template.json" -o -name ".env.example" | head -10
+rg --files | rg "config\.json|config\.py|config-template\.json|\.env\.example"
 
 # 查找环境变量定义
-grep -r "os.environ\|os.getenv\|environ" --include="*.py" | head -20
+rg "os\.environ|os\.getenv|environ" --type py
 ```
 
 ### Step 2：分析配置加载流程

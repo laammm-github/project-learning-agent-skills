@@ -143,16 +143,16 @@ if project_type == "Agent 框架":
 
 ```bash
 # 检查配置系统分析
-grep -ri "config\|配置" project-book/03-architecture.md project-book/01-project-overview.md
+rg -i "config|配置" project-book/03-architecture.md project-book/01-project-overview.md
 
 # 检查插件/中间件分析
-grep -ri "plugin\|中间件\|middleware" project-book/03-architecture.md
+rg -i "plugin|中间件|middleware" project-book/03-architecture.md
 
 # 检查异常处理分析
-grep -ri "error\|exception\|异常\|错误" project-book/04-core-flow.md
+rg -i "error|exception|异常|错误" project-book/04-core-flow.md
 
 # 检查测试覆盖分析
-grep -ri "test\|测试" project-book/01-project-overview.md project-book/03-architecture.md
+rg -i "test|测试" project-book/01-project-overview.md project-book/03-architecture.md
 ```
 
 ### Step 4：生成学习检查清单
@@ -259,7 +259,7 @@ A: [简要说明]
 
 **参考**：05 章 [扩展点名称]（文件:行号）
 
-`
+```
 
 「静态推断」——所有设计挑战基于 AI 对代码的理解，不保证 100% 准确。
 

@@ -25,6 +25,9 @@ description: 扫描项目结构，识别项目类型，生成项目概览文档�
 ### Step 1：扫描顶层结构
 
 ```bash
+# 优先使用结构化清单
+python scripts/inventory_repo.py <目标仓库>
+# 或手动查看
 ls -la
 find . -maxdepth 1 -type d | sort
 ```
@@ -50,14 +53,18 @@ find . -maxdepth 1 -type d | sort
 ### Step 4：找入口文件
 
 ```bash
+# 优先使用结构化清单
+python scripts/inventory_repo.py <目标仓库> --entrypoints
+
+# 或手动搜索（rg 跨平台）
 # Python
-find . -name "main.py" -o -name "app.py" -o -name "__main__.py" | head -5
+rg --files | rg "main\.py$|app\.py$|__main__\.py$"
 
 # Node
-find . -name "index.ts" -o -name "server.js" | head -5
+rg --files | rg "index\.ts$|server\.js$"
 
 # Go
-find . -name "main.go" | head -5
+rg --files | rg "main\.go$"
 ```
 
 输出：`project-overview.md` 的"入口文件"章节
@@ -65,6 +72,10 @@ find . -name "main.go" | head -5
 ### Step 5：分析依赖
 
 ```bash
+# 优先使用结构化清单
+python scripts/inventory_repo.py <目标仓库> --deps
+
+# 或直接读取依赖文件
 cat requirements.txt    # Python
 cat package.json        # Node
 cat go.mod             # Go

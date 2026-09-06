@@ -213,7 +213,7 @@ __all__ = [
 
 生成 project-book/index.html（单文件自包含，无外部依赖）：
 
-`html
+```html
 <!DOCTYPE html>
 <html lang="zh-CN" data-theme="light">
 <head>
@@ -277,7 +277,7 @@ __all__ = [
 </script>
 </body>
 </html>
-`
+```
 
 **要求**：
 - 嵌入所有 Mermaid 图到对应章节
