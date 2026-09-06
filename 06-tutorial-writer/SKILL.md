@@ -240,6 +240,8 @@ docs/analysis/      →     06-tutorial-writer     →    project-book/
 ✓ 06 是否按模块组织源码导航？
 ✓ 07 是否提供可复制的扩展模板？
 ✓ 是否有"下一步"引导？
+✓ index.html 是否可离线打开且图正常渲染？
+✓ index.html 是否可离线打开且图正常渲染？
 ✓ 模板是否通用化（不绑定特定项目类型）？
 ```
 
