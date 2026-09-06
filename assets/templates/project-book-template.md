@@ -17,7 +17,8 @@ project-book/
 ├── 07-extension-guide.md        # 扩展开发指南（通道、工具、插件）
 ├── 08-examples.md               # 最小可运行示例
 ├── 09-faq.md                    # 常见问题与疑难解答
-└── 10-learning-checklist.md     # 学习检查清单
+├── 10-learning-checklist.md     # 学习检查清单
+└── 11-architecture-candidates.md  # 架构改进候选（可选，09 产出）
 ```
 
 ---
@@ -36,6 +37,7 @@ project-book/
 06-tutorial-writer → 06-source-code-guide.md + 07-extension-guide.md
 07-example-generator → 08-examples.md
 08-learning-review → 09-faq.md + 10-learning-checklist.md
+09-architecture-review → 11-architecture-candidates.md（可选，用户显式触发）
 | （管道） | .pipeline/ 下 8 个 JSON 中间产物（每阶段自动写入） |
 ```
 
@@ -44,6 +46,7 @@ project-book/
 - `02-installation.md`：由 02-config-and-installation 生成（分析配置系统）
 - `06-source-code-guide.md`：由 06-tutorial-writer 整合（基于 01-05 原始数据）
 - `07-extension-guide.md`：由 06-tutorial-writer 整合 + 07-example-generator 提供模板
+- `11-architecture-candidates.md`：由 09-architecture-review 生成（可选，用户显式触发）
 
 ---
 
@@ -56,6 +59,9 @@ ls project-book/
 02-installation.md
 ...
 10-learning-checklist.md
+
+# 可选：架构改进候选
+11-architecture-candidates.md
 
 # 新人可以按顺序阅读 01-10
 # 或按需跳转（如只看 03-04 了解架构和核心流程）

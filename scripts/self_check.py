@@ -18,8 +18,8 @@ LOCAL_LINK_RE = re.compile(r"\[[^\]]+\]\((?!https?://|#)([^)]+)\)")
 def structural_errors() -> list[str]:
     errors: list[str] = []
     skill_files = sorted(SKILL_ROOT.rglob("SKILL.md"))
-    if len(skill_files) != 9:
-        errors.append(f"expected root plus eight child SKILL.md files, found {len(skill_files)}")
+    if len(skill_files) != 10:
+        errors.append(f"expected root plus nine child SKILL.md files, found {len(skill_files)}")
 
     for skill_file in skill_files:
         text = skill_file.read_text(encoding="utf-8-sig")

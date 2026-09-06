@@ -16,13 +16,14 @@ description: A methodology for learning open-source projects, supporting full/fa
 Project Tutor Skill Suite
 ├── SKILL.md                          # Orchestrator：协调子 Skill
 ├── 01-repo-discovery/               # 阶段 1：项目发现
-├── 02-config-and-installation/      # 阶段 2：安装与配置（新增）
+├── 02-config-and-installation/      # 阶段 2：安装与配置
 ├── 03-architecture-analysis/        # 阶段 3：架构分析
 ├── 04-code-flow-analysis/           # 阶段 4：代码流分析
 ├── 05-concept-extraction/           # 阶段 5：概念提取
 ├── 06-tutorial-writer/              # 阶段 6：教程生成
 ├── 07-example-generator/            # 阶段 7：示例生成
-└── 08-learning-review/              # 阶段 8：学习检查
+├── 08-learning-review/              # 阶段 8：学习检查
+└── 09-architecture-review/          # 阶段 9：架构改进（可选）
 ```
 
 ### 使用方式
@@ -66,15 +67,16 @@ Phase 8: 学习检查（Review）          → 验证学习完整性，生成检
   03-architecture-analysis  → 03-architecture.md（原始数据）
   04-code-flow-analysis     → 04-core-flow.md（原始数据）
   05-concept-extraction     → 05-core-concepts.md（原始数据）
-  ↓ 保留在 docs/analysis/ 供深挖
 
 教学格式转换层（06）：
   06-tutorial-writer      → 整合原始数据为教学格式（01-06 章节）
-  ↓ 生成最终产物
 
 示例与检查层（07-08）：
   07-example-generator    → 08-examples.md
   08-learning-review      → 09-faq.md + 10-learning-checklist.md
+
+可选决策层（09）：
+  09-architecture-review  → 11-architecture-candidates.md（用户显式触发）
 ```
 
 ---
@@ -109,7 +111,8 @@ project-book/
 ├── 07-extension-guide.md        # 扩展开发指南（模块、工具、插件等）
 ├── 08-examples.md               # 最小可运行示例
 ├── 09-faq.md                    # 常见问题与疑难解答
-└── 10-learning-checklist.md     # 学习检查清单
+├── 10-learning-checklist.md     # 学习检查清单（标准 10 章完）
+└── 11-architecture-candidates.md  # 架构改进候选（可选，09 产出）
 ```
 
 ---
@@ -120,34 +123,32 @@ project-book/
 
 | 序号 | 子 Skill | 输入 | 输出文件 | 产物编号 | 参考 |
 |------|---------|------|---------|---------|------|
-| 1 | [01-repo-discovery](01-repo-discovery/SKILL.md) | 项目仓库 | `01-project-overview.md` | 01 | CLAUDE.md Generator |
-| 2 | [02-config-and-installation](02-config-and-installation/SKILL.md) | 配置系统 | `02-installation.md` | 02 | 配置系统专项学习 |
-| 3 | [03-architecture-analysis](03-architecture-analysis/SKILL.md) | 源码 | `03-architecture.md` | 03 | Agent Toolkit |
-| 4 | [04-code-flow-analysis](04-code-flow-analysis/SKILL.md) | 核心链路代码 | `04-core-flow.md` | 04 | 消息流追踪最佳实践 |
-| 5 | [05-concept-extraction](05-concept-extraction/SKILL.md) | 核心类/函数 | `05-core-concepts.md` | 05 | 类比学习理论 |
-| 6 | [06-tutorial-writer](06-tutorial-writer/SKILL.md) | 01-05 原始数据 | `06-07` 章节整合 | 06-07 | Technical Writing |
-| 7 | [07-example-generator](07-example-generator/SKILL.md) | 扩展点代码 | `08-examples.md` | 08 | Supabase Agent Skills |
-| 8 | [08-learning-review](08-learning-review/SKILL.md) | 全部产物 | `09-10` 章节 | 09-10 | 元认知理论 |
+| 1 | [01-repo-discovery](01-repo-discovery/SKILL.md) | 仓库根目录 | 01-project-overview.md | 01 | — |
+| 2 | [02-config-and-installation](02-config-and-installation/SKILL.md) | 01 产物 + 配置/构建文件 | 02-installation.md | 02 | — |
+| 3 | [03-architecture-analysis](03-architecture-analysis/SKILL.md) | 01 产物 + 源码结构 | 03-architecture.md | 03 | — |
+| 4 | [04-code-flow-analysis](04-code-flow-analysis/SKILL.md) | 01/03 产物 + 源码 | 04-core-flow.md | 04 | — |
+| 5 | [05-concept-extraction](05-concept-extraction/SKILL.md) | 01/03/04 产物 + 源码 | 05-core-concepts.md | 05 | — |
+| 6 | [06-tutorial-writer](06-tutorial-writer/SKILL.md) | 01-05 产物 | 06-07 章节 | 06-07 | — |
+| 7 | [07-example-generator](07-example-generator/SKILL.md) | 01/05/06 产物 | 08-examples.md | 08 | — |
+| 8 | [08-learning-review](08-learning-review/SKILL.md) | 全部产物 | 09-10 章节 | 09-10 | 元认知理论 |
+| 9 | [09-architecture-review](09-architecture-review/SKILL.md) | 03/04/05 产物 | 11-architecture-candidates.md | 可选 | — |
 
-### 编号逻辑说明
+### 调度说明
 
-**原则：子 Skill 编号 = 产物编号**
-
-- 01-05：原始分析数据层，一一对应
-- 06：教学格式转换层，整合 01-05 生成 06-07
+- 01-05：原始分析层，按顺序执行（有依赖）
+- 06：教学转换层，依赖 01-05 全部完成
 - 07-08：示例与检查层，分别生成 08 和 09-10
+- 09：可选决策层，用户显式触发（如"识别架构改进机会"），默认不参与标准流水线
 
 ---
 
 ## 六、设计参考
 
-本套件参考以下开源项目和方法论：
-
-- **Agent Skills 官方规范**：https://github.com/agentskills/agentskills
-- **Supabase Agent Skills**：https://github.com/supabase/agent-skills
-- **Claude Technical Writing Skill**：Anthropic 内部文档
-- **Project Documentation Skills**：https://www.reddit.com/r/ClaudeCode/comments/1ufee3y/
-- **Agent Toolkit**：https://github.com/softaworks/agent-toolkit
+- 认知科学中的"类比学习"理论（05-concept-extraction）
+- 技术文档最佳实践（Diátaxis 框架）（06-tutorial-writer）
+- 元认知理论（08-learning-review）
+- ADR（架构决策记录）格式（03-architecture-analysis）
+- 7 维架构评估模型（09-architecture-review）
 
 ---
 
@@ -155,10 +156,10 @@ project-book/
 
 每个阶段除写 Markdown 章节外，同步写一份结构化 JSON 中间产物到 `project-book/.pipeline/`，实现增量重跑与可复现。
 
-### 中间产物（每阶段一份）
+### 管道产物
 
-| 阶段 | 中间产物 | 关键字段 |
-| --- | --- | --- |
+| 阶段 | JSON 文件 | 核心字段 |
+|------|----------|---------|
 | 01 | `01-discovery.json` | `entrypoints`、`project_type`、`tech_stack`、`dirs` |
 | 02 | `02-config.json` | `env_vars`、`priority_chain`、`install_steps` |
 | 03 | `03-architecture.json` | `modules`、`deps`、`runtime_processes`、`deployment` |
@@ -186,14 +187,19 @@ project-book/
   "pipeline_stages": {
     "01-discovery": "completed",
     "02-config": "completed",
-    …
+    "03-architecture": "completed",
+    "04-core-flow": "completed",
+    "05-concepts": "completed",
+    "06-tutorial": "completed",
+    "07-examples": "completed",
+    "08-review": "completed"
   }
 }
 ```
 
 `pipeline_stages` 取值：`"completed"` / `"skipped"` / `"missing"`。targeted 模式下只更新目标阶段及下游，被跳过的阶段标记为 `"skipped"`。
 
-
+---
 
 ## 八、全局纪律
 
@@ -204,6 +210,8 @@ project-book/
 3. **分级**：命令与结论标注「已运行」「静态验证」「静态推断」「未运行」四档；README 表述只是线索，需对照 manifest/入口/测试或实现确认。
 4. **占位符**：交付章节中不得残留任何 `[占位符]` 样式文本。
 5. **优先级**：不要求每个模块同等深度——高频/高风险模块优先深挖，低优先级模块可简略处理，但必须写明分级依据。
+
+---
 
 ## 九、使用示例
 
@@ -269,7 +277,24 @@ Agent 调度流程：
 8. 08-learning-review → 10-learning-checklist.md（检查贡献者准备度）
 
 重点：07-extension-guide.md 提供扩展开发方法
-```n## 十、质量检查
+```
+
+### 场景 5：学习完项目后，想识别架构改进机会
+
+```
+用户提示词：
+"这个项目有哪些架构改进机会？"
+
+Agent 调度流程：
+1. 确保 01-05 已完成（自动检测或提示用户先跑完整学习）
+2. 09-architecture-review → 11-architecture-candidates.md（只读 03/04/05，按 7 维排序）
+
+适用于：准备重构、技术债治理、架构评审
+```
+
+---
+
+## 十、质量检查
 
 每个子 Skill 输出前，检查：
 
@@ -281,4 +306,3 @@ Agent 调度流程：
 ```
 
 ---
-
