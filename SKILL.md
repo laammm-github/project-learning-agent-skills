@@ -151,7 +151,51 @@ project-book/
 
 ---
 
-## 七、使用示例
+## 七、管道化运行
+## 七、管道化运行
+
+每个阶段除写 Markdown 章节外，同步写一份结构化 JSON 中间产物到 `project-book/.pipeline/`，实现增量重跑与可复现。
+
+### 中间产物（每阶段一份）
+
+| 阶段 | 中间产物 | 关键字段 |
+| --- | --- | --- |
+| 01 | `01-discovery.json` | `entrypoints`、`project_type`、`tech_stack`、`dirs` |
+| 02 | `02-config.json` | `env_vars`、`priority_chain`、`install_steps` |
+| 03 | `03-architecture.json` | `modules`、`deps`、`runtime_processes`、`deployment` |
+| 04 | `04-core-flow.json` | `flows[{name, hops[{file, fn, input, transform, output}]}]` |
+| 05 | `05-concepts.json` | `abstractions`、`contracts`、`invariants`、`extension_points` |
+| 06 | `06-tutorial.json` | `nav_paths`、`extension_steps` |
+| 07 | `07-examples.json` | `examples[{name, type, status, command}]` |
+| 08 | `08-review.json` | `blind_spots`、`faq`、`checklist` |
+
+每份 JSON 含三个元字段：`"generated_at"`（ISO-8601 时间戳）、`"source_sha"`（git rev-parse HEAD 或 null）、`"mode"`（full/fast/targeted）。
+
+### 增量路由
+
+下一阶段启动时，先检查上游 JSON 是否存在且 `source_sha` 与当前 HEAD 一致：
+- **一致** → 跳过上游重新扫描，直接从 JSON 读取输入
+- **不一致或不存在** → 重新运行上游阶段
+
+`source_sha` 为 null（非 Git 仓库）时不做增量判断，每次全量重跑。
+
+### manifest 新增字段
+
+```json
+{
+  "pipeline_sha": "当前 HEAD 或 null",
+  "pipeline_stages": {
+    "01-discovery": "completed",
+    "02-config": "completed",
+    …
+  }
+}
+```
+
+`pipeline_stages` 取值：`"completed"` / `"skipped"` / `"missing"`。targeted 模式下只更新目标阶段及下游，被跳过的阶段标记为 `"skipped"`。
+
+
+## 九、使用示例
 
 ### 场景 1：完整学习一个新项目
 
@@ -215,7 +259,7 @@ Agent 调度流程：
 8. 08-learning-review → 10-learning-checklist.md（检查贡献者准备度）
 
 重点：07-extension-guide.md 提供扩展开发方法
-```## 八、质量检查
+```## 十、质量检查
 
 每个子 Skill 输出前，检查：
 

@@ -36,6 +36,7 @@ project-book/
 06-tutorial-writer → 06-source-code-guide.md + 07-extension-guide.md
 07-example-generator → 08-examples.md
 08-learning-review → 09-faq.md + 10-learning-checklist.md
+| （管道） | .pipeline/ 下 8 个 JSON 中间产物（每阶段自动写入） |
 ```
 
 ### 特殊文件
