@@ -16,7 +16,7 @@ description: 将原始分析数据整合转化为人类可读的教学文档和�
 - 扩展开发指南（07-extension-guide.md）
 
 **重要原则**：
-- 01-05 的原始分析数据**保留不变**（存放在 docs/analysis/）
+- 01-05 的原始分析数据**保留不变**（存放在 project-book/）
 - 06 只负责生成 06-07 章节，**不覆盖** 01-05
 
 ---
@@ -28,7 +28,7 @@ description: 将原始分析数据整合转化为人类可读的教学文档和�
 读取 01-05 生成的原始数据：
 
 ```
-docs/analysis/
+project-book/
 ├── 01-project-overview.md      # 原始数据
 ├── 02-installation.md          # 原始数据
 ├── 03-architecture.md          # 原始数据
@@ -208,6 +208,83 @@ __all__ = [
 
 ---
 
+
+### Step 6：生成交互式导航页
+
+生成 project-book/index.html（单文件自包含，无外部依赖）：
+
+`html
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>[项目名] 学习教材</title>
+<style>
+  :root { --bg: #fff; --fg: #1a1a1a; --border: #e0e0e0; --link: #2563eb; --code-bg: #f5f5f5; }
+  [data-theme="dark"] { --bg: #1a1a2e; --fg: #e0e0e0; --border: #333; --link: #60a5fa; --code-bg: #2a2a3e; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--fg); display: flex; min-height: 100vh; }
+  nav { width: 260px; border-right: 1px solid var(--border); padding: 1rem; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  nav a { display: block; padding: 0.4rem 0.5rem; color: var(--link); text-decoration: none; border-radius: 4px; font-size: 0.9rem; }
+  nav a:hover { background: var(--code-bg); }
+  main { flex: 1; padding: 2rem; max-width: 900px; }
+  .theme-toggle { margin-bottom: 1rem; cursor: pointer; background: var(--code-bg); border: 1px solid var(--border); padding: 0.3rem 0.8rem; border-radius: 4px; color: var(--fg); }
+  pre { background: var(--code-bg); padding: 1rem; border-radius: 6px; overflow-x: auto; margin: 1rem 0; }
+  h2 { margin-top: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+  h3 { margin-top: 1.5rem; }
+  p, li { line-height: 1.7; }
+  /* Mermaid 暗色适配 */
+  [data-theme="dark"] .mermaid { filter: invert(0.85) hue-rotate(180deg); }
+</style>
+</head>
+<body>
+<nav>
+  <button class="theme-toggle" onclick="toggleTheme()">切换亮暗主题</button>
+  <a href="#ch1">第 1 章：项目概览</a>
+  <a href="#ch2">第 2 章：安装与配置</a>
+  <a href="#ch3">第 3 章：架构分析</a>
+  <a href="#ch4">第 4 章：核心链路</a>
+  <a href="#ch5">第 5 章：核心概念</a>
+  <a href="#ch6">第 6 章：源码导航</a>
+  <a href="#ch7">第 7 章：扩展开发</a>
+  <a href="#ch8">第 8 章：示例</a>
+  <a href="#ch9">第 9 章：FAQ</a>
+  <a href="#ch10">第 10 章：检查清单</a>
+</nav>
+<main>
+  <!-- 从 project-book/ 各章节提取标题、Mermaid 图、关键段落填充此处 -->
+  <div id="ch1"><!-- 01-project-overview.md 内容 --></div>
+  <div id="ch2"><!-- 02-installation.md 内容 --></div>
+  <div id="ch3"><!-- 03-architecture.md 内容 --></div>
+  <div id="ch4"><!-- 04-core-flow.md 内容 --></div>
+  <div id="ch5"><!-- 05-core-concepts.md 内容 --></div>
+  <div id="ch6"><!-- 06-source-code-guide.md 内容 --></div>
+  <div id="ch7"><!-- 07-extension-guide.md 内容 --></div>
+  <div id="ch8"><!-- 08-examples.md 内容 --></div>
+  <div id="ch9"><!-- 09-faq.md 内容 --></div>
+  <div id="ch10"><!-- 10-learning-checklist.md 内容 --></div>
+</main>
+<script>
+  function toggleTheme() {
+    const html = document.documentElement;
+    html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+  }
+</script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'default' });
+</script>
+</body>
+</html>
+`
+
+**要求**：
+- 嵌入所有 Mermaid 图到对应章节
+- 亮暗双主题切换（纯 CSS，system font stack）
+- 确认 index.html 可离线打开且图正常渲染
+
+
 ## 输出物
 
 - `project-book/06-source-code-guide.md`
@@ -221,7 +298,7 @@ __all__ = [
 
 ```
 原始数据（01-05）          教学转换（06）           最终产物（project-book）
-docs/analysis/      →     06-tutorial-writer     →    project-book/
+project-book/      →     06-tutorial-writer     →    project-book/
 ├── 01-project-overview.md     （只读）              ├── 01-project-overview.md
 ├── 02-installation.md         （只读）              ├── 02-installation.md
 ├── 03-architecture.md         （只读）              ├── 03-architecture.md
@@ -240,7 +317,6 @@ docs/analysis/      →     06-tutorial-writer     →    project-book/
 ✓ 06 是否按模块组织源码导航？
 ✓ 07 是否提供可复制的扩展模板？
 ✓ 是否有"下一步"引导？
-✓ index.html 是否可离线打开且图正常渲染？
 ✓ index.html 是否可离线打开且图正常渲染？
 ✓ 模板是否通用化（不绑定特定项目类型）？
 ```

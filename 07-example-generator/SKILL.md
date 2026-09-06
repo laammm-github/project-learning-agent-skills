@@ -136,45 +136,6 @@ class MyTool([BaseTool]):
 ```
 
 ```python
-# 插件/中间件模板（适用于事件驱动架构）：
-# 文件：examples/custom_plugin.py
-
-from [注册模块] import register
-from [上下文模块] import ContextType
-from [回复模块] import Reply, ReplyType
-from [插件基类] import Plugin, Event, EventAction
-
-@register(
-    name="MyPlugin",
-    desire_priority=0,       # 优先级（数字越大越先执行）
-    hidden=False,            # 是否在插件列表可见
-    enabled=True,            # 默认是否启用
-    desc="[插件描述]",
-    version="0.1",
-    author="[作者名]",
-)
-class MyPlugin(Plugin):
-    def __init__(self):
-        super().__init__()
-        self.handlers[Event.ON_HANDLE_CONTEXT] = self.on_handle_context
-    
-    def on_handle_context(self, e_context: EventContext):
-        # 检查消息类型
-        if e_context["context"].type != ContextType.TEXT:
-            return
-        
-        # 处理消息
-        content = e_context["context"].content
-        # 替换为实际处理逻辑
-        if "[触发条件]" in content.lower():
-            reply = Reply()
-            reply.type = ReplyType.TEXT
-            reply.content = f"[响应内容]"
-            e_context["reply"] = reply
-            e_context.action = EventAction.BREAK_PASS
-    
-    def get_help_text(self, **kwargs):
-        return "[帮助文本]"
 ```
 
 ### Step 3：生成配置示例
