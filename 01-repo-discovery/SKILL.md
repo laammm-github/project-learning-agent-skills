@@ -1,43 +1,134 @@
 ---
 name: 01-repo-discovery
-description: Discover a repository's shape, subprojects, technology stacks, and real entrypoints, then create project-book/01-project-overview.md.
+description: 扫描项目结构，识别项目类型，生成项目概览文档（一句话定位、技术栈、入口文件）
 ---
 
-# Repository discovery
+# 01-Repo Discovery — 项目发现
 
-Produce an evidence-backed map of the repository, including hybrid and monorepo structures.
+> 目标：扫描项目结构，识别项目类型，生成项目概览文档
 
-## Preparation
+---
 
-Read `../references/output-contract.md`. If configuration or an existing book is involved, also read `../references/evidence-and-safety.md`. Reuse Phase 00 inventory from the parent skill or run `../scripts/inventory_repo.py <repo>`.
+## 职责
 
-## Analysis
+快速扫描项目，输出：
+- 项目是什么（一句话定位）
+- 技术栈
+- 目录结构
+- 入口文件
+- 项目类型判断
 
-1. Read applicable repository instructions and contributor documentation.
-2. Use build and workspace manifests, container definitions, package scripts, executable declarations, and imports to identify subprojects. Directory names alone are insufficient.
-3. Classify the repository shape and assign multiple applicable types to each subsystem, such as web, CLI, library, service, worker, agent runtime, storage, or infrastructure.
-4. Treat inventory `entrypoint_candidates` only as leads. Confirm `entrypoints` from executable declarations, framework configuration, container commands, or direct call sites; do not promote candidates merely by filename.
-5. Derive versions and dependencies from authoritative manifests rather than README prose.
-6. Record exclusions and unknown areas for repositories too large to inspect completely.
+---
 
-## Output
+## 执行流程
 
-Write `project-book/01-project-overview.md` with:
+### Step 1：扫描顶层结构
 
-- analysis baseline and repository shape;
-- one-sentence purpose and principal user journeys;
-- subsystem inventory with types and responsibilities;
-- annotated top-level tree;
-- confirmed entrypoints and startup path;
-- technology stack and authoritative manifests;
-- shortest useful reading route;
-- unknown or excluded areas.
+```bash
+ls -la
+find . -maxdepth 1 -type d | sort
+```
 
-Every material entrypoint, version, and subsystem claim needs repository-relative `path:line` evidence. Update manifest fields `subprojects`, `project_types`, `entrypoints`, and `chapter_sources`.
+输出：`project-overview.md` 的"目录结构"章节
 
-## Acceptance
+### Step 2：识别项目类型
 
-- Supports more than one subsystem and project type.
-- Contains no guessed entrypoint or version.
-- Uses cross-platform discovery and excludes dependencies/build artifacts.
-- Separates confirmed facts from `静态推断`.
+根据目录特征判断（见主 Skill.md 的"项目类型识别"表）
+
+输出：`project-overview.md` 的"项目类型"章节
+
+### Step 3：读取 README
+
+提取：
+- 项目定位
+- 核心特性
+- 快速开始命令
+- 架构图（如果有）
+
+输出：`project-overview.md` 的"项目简介"章节
+
+### Step 4：找入口文件
+
+```bash
+# Python
+find . -name "main.py" -o -name "app.py" -o -name "__main__.py" | head -5
+
+# Node
+find . -name "index.ts" -o -name "server.js" | head -5
+
+# Go
+find . -name "main.go" | head -5
+```
+
+输出：`project-overview.md` 的"入口文件"章节
+
+### Step 5：分析依赖
+
+```bash
+cat requirements.txt    # Python
+cat package.json        # Node
+cat go.mod             # Go
+```
+
+输出：`project-overview.md` 的"技术栈"章节
+
+### Step 6：生成 project-overview.md
+
+结构：
+
+```markdown
+# 项目概览：[项目名]
+
+## 基本信息
+- 语言：
+- 协议：
+- 入口：
+
+## 一句话定位
+[项目是做什么的？]
+
+## 核心特性
+1. ...
+2. ...
+3. ...
+
+## 目录结构
+[树状图]
+
+## 入口文件
+- Python: [路径]
+- Node: [路径]
+
+## 技术栈
+- 框架：
+- 数据库：
+- 消息队列：
+- 其他依赖：
+
+## 快速开始
+[安装 + 运行命令]
+```
+
+---
+
+## 输出物
+
+- `project-book/01-project-overview.md`
+
+---
+
+## 质量检查
+
+```
+✓ 一句话定位是否清晰？
+✓ 目录结构是否标注了核心模块？
+✓ 入口文件是否准确？
+✓ 技术栈是否完整？
+```
+
+---
+
+## 参考
+
+- CLAUDE.md Generator 类 Skill（社区案例）
+- Agent Skills 官方规范：https://github.com/agentskills/agentskills

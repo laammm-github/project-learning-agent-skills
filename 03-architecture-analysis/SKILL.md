@@ -1,41 +1,10 @@
 ---
 name: 03-architecture-analysis
-description: Analyze module boundaries, runtime processes, dependencies, deployment, cross-cutting concerns, decisions, and risks, then create project-book/03-architecture.md.
+description: 分析系统架构、模块职责、依赖关系、设计模式，生成架构分析文档
 ---
 
-# Architecture analysis
+# 03-Architecture Analysis — 架构分析
 
-Turn the repository inventory into a verified static, runtime, and deployment model. Read `../references/output-contract.md`, `../references/evidence-and-safety.md`, and `../references/diagram-contract.md` first.
+> 目标：分析系统架构、模块职责、依赖关系、设计模式
 
-## Analysis workflow
-
-1. **Boundaries**: identify components from manifests, entrypoints, package boundaries, public interfaces, persistence adapters, and ownership rules. Record responsibility and data owned by each component.
-2. **Static dependencies**: trace imports, API clients, shared libraries, schemas, and generated contracts. State dependency direction and flag cycles or boundary leaks only when evidenced.
-3. **Runtime processes**: start from confirmed entrypoints and map request handlers, workers, schedulers, queues, event buses, databases, caches, and external services.
-4. **Deployment topology**: verify process/container names, ports, health checks, volumes, networks, scaling units, and startup ordering from deployment configuration.
-5. **Cross-cutting concerns**: locate authentication/authorization, tenancy, configuration, observability, retries, idempotency, transactions, caching, billing, and error translation when present.
-6. **Decisions and risks**: distinguish explicit decisions from `静态推断`. Link each tradeoff or risk to concrete implementation evidence and explain impact rather than guessing intent.
-7. **Representative verification**: cross-check the model against at least one real route, command, job, or library call and its tests.
-
-## Output
-
-Write `project-book/03-architecture.md` with:
-
-- scope and analysis baseline;
-- subsystem/context map;
-- module responsibilities and owned data;
-- dependency direction and contracts;
-- runtime process and deployment diagrams;
-- cross-cutting capability map;
-- architectural decisions, tradeoffs, risks, and known unknowns;
-- evidence index.
-
-Create or explicitly account for the `system_structure` and `runtime_deployment` diagram roles according to the selected mode. Use source/deployment names, the required diagram ID comment, evidence index, readability limits, and manifest entries from the diagram contract. Update `chapter_sources`.
-
-## Acceptance
-
-- Every component shown exists and every important edge has `path:line` evidence.
-- Every expected diagram role is present or has an evidenced `not_applicable` reason.
-- Static structure, runtime interaction, and deployment are not conflated.
-- Hybrid repositories show subsystem-specific architecture plus integration points.
-- Unknowns and inferred intent are labeled rather than presented as fact.
+---
