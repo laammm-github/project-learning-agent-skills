@@ -11,6 +11,7 @@
 - 分析模块边界、运行时进程、依赖方向、部署拓扑、跨切面能力和架构风险。
 - 追踪代表性代码流，覆盖输入、变换、输出、持久化和异常路径。
 - 提取真实的领域类型、接口、schema、不变量和扩展点。
+- 按学习问题生成有证据的 Mermaid UML 风格图，覆盖系统结构、部署、时序，并按需生成类图和状态图。
 - 生成源码导航、扩展指南、示意示例、可运行示例、FAQ 和学习检查清单。
 - 通过 manifest 记录 Git 源码基线、证据文件和验证状态，支持安全的定向更新。
 
@@ -47,7 +48,21 @@ project-book/
 | `fast` | 快速建立项目地图 | 仍生成十章，但内容精简；必须包含一条核心链路和一个已验证示例 |
 | `targeted` | 只更新指定主题或章节 | 仅更新目标章节及必要依赖；无关章节的字节和时间戳必须保持不变 |
 
-每次运行都会在 `.learning-manifest.json` 中写入 `schema_version: 2`、源码 `head_sha`、模式、目标章节、子项目、入口、章节证据和验证状态。
+每次运行都会在 `.learning-manifest.json` 中写入 `schema_version: 2`、源码 `head_sha`、模式、目标章节、子项目、入口、章节证据、图表元数据和验证状态。
+
+## UML 风格图规则
+
+图表用于回答明确的学习问题，不作为装饰，也不会把整个代码库自动转成类图。默认使用可随 Markdown 审查的 Mermaid：
+
+- 完整模式交代系统结构、运行时/部署和每条代表性核心链路；不适用时必须记录理由。
+- 快速模式优先保留一张系统结构图和一张核心链路时序图。
+- 定向模式只更新目标章节相关图表，保留其他图表及 manifest 记录。
+- 每个节点和重要连线都必须来自真实源码、配置或部署声明，并提供 `文件:行号` 证据索引。
+- 单图最多 12 个主要节点、18 条边；超过时按子系统或场景拆分。
+- 类图只描述核心契约和代表性实现；状态图只有在存在至少三个真实状态及转换时才生成。
+- 图表未经渲染器检查时只标记为 `静态验证`，不能声称已渲染通过。
+
+Mermaid 的上下文、组件和部署图属于 UML 风格视图，不等同于严格 UML。仅当用户明确要求并且工具可用时使用 PlantUML。完整契约见 [references/diagram-contract.md](references/diagram-contract.md)。
 
 ## 子技能
 
@@ -82,7 +97,7 @@ python scripts/validate_book.py <repo> --snapshot
 python scripts/self_check.py
 ```
 
-`inventory_repo.py` 会区分 manifest 确认的 `entrypoints` 和仅由文件名发现的 `entrypoint_candidates`。`validate_book.py` 会拒绝失效证据路径、越界行号、未闭合 Markdown 围栏、遗留占位符、凭据 URL 和未脱敏密钥赋值。
+`inventory_repo.py` 会区分 manifest 确认的 `entrypoints` 和仅由文件名发现的 `entrypoint_candidates`。`validate_book.py` 会拒绝失效证据路径、越界行号、未闭合 Markdown 围栏、遗留占位符、凭据 URL、未脱敏密钥赋值，以及未登记、超复杂、来源失效或错误声称已渲染的图表。
 
 ## 安全与增量更新
 
@@ -93,7 +108,7 @@ python scripts/self_check.py
 - 定向模式写入前必须执行 `--snapshot`，并将快照原样写入 manifest 的 `preservation` 字段；不能在写入后重新生成快照。
 - `head_sha` 表示源码分析基线。只提交 `project-book/` 不会使源码基线失效；真实源码变化则需要重新评估受影响章节。
 
-详细规则见 [references/output-contract.md](references/output-contract.md) 和 [references/evidence-and-safety.md](references/evidence-and-safety.md)。
+详细规则见 [references/output-contract.md](references/output-contract.md)、[references/evidence-and-safety.md](references/evidence-and-safety.md) 和 [references/diagram-contract.md](references/diagram-contract.md)。
 
 ## 开发与验证
 
@@ -103,7 +118,7 @@ python scripts/self_check.py
 python scripts/self_check.py
 ```
 
-当前测试覆盖 Monorepo、空格路径、Windows 路径、无 Git、缺少 `rg`、损坏 Markdown、失效证据、占位符、敏感信息、fast 模式约束、targeted 模式保留以及 book-only Git 提交等场景。
+当前测试覆盖 Monorepo、空格路径、Windows 路径、无 Git、缺少 `rg`、损坏 Markdown、失效证据、占位符、敏感信息、图表契约、fast 模式约束、targeted 模式保留以及 book-only Git 提交等场景。
 
 ## 设计边界
 

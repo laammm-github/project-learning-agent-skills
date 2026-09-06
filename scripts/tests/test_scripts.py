@@ -101,6 +101,59 @@ class ValidateBookTests(unittest.TestCase):
                 f"# {chapter}\n\nEvidence: `src/app.py:1`\n",
                 encoding="utf-8",
             )
+        (book / "03-architecture.md").write_text(
+            "# Architecture\n\nEvidence: `src/app.py:1`\n\n"
+            "<!-- diagram:system-structure -->\n"
+            "```mermaid\nflowchart LR\n    User --> App\n```\n",
+            encoding="utf-8",
+        )
+        (book / "04-core-flow.md").write_text(
+            "# Core flow\n\nEvidence: `src/app.py:1`\n\n"
+            "<!-- diagram:core-flow-sequence -->\n"
+            "```mermaid\nsequenceDiagram\n    User->>App: run\n    App-->>User: result\n```\n",
+            encoding="utf-8",
+        )
+        diagrams = [
+            {
+                "id": "system-structure",
+                "chapter": "03-architecture.md",
+                "role": "system_structure",
+                "type": "component",
+                "status": "static",
+                "purpose": "Orient the learner to the application boundary.",
+                "sources": ["src/app.py"],
+                "node_count": 2,
+                "edge_count": 1,
+                "reason": "Renderer unavailable.",
+            },
+            {
+                "id": "runtime-deployment",
+                "chapter": "03-architecture.md",
+                "role": "runtime_deployment",
+                "type": "deployment",
+                "status": "not_applicable",
+                "purpose": "Account for deployment topology.",
+                "sources": [],
+                "node_count": 0,
+                "edge_count": 0,
+                "reason": "The fixture has no deployment configuration.",
+            },
+            {
+                "id": "core-flow-sequence",
+                "chapter": "04-core-flow.md",
+                "role": "core_flow",
+                "type": "sequence",
+                "status": "static",
+                "purpose": "Explain the representative request and response.",
+                "sources": ["src/app.py"],
+                "node_count": 2,
+                "edge_count": 2,
+                "reason": "Renderer unavailable.",
+            },
+        ]
+        if mode == "targeted":
+            target_set = set(targets or [])
+            diagrams = [entry for entry in diagrams if entry["chapter"] in target_set]
         manifest = {
             "schema_version": 2,
             "repo_root": ".",
@@ -112,11 +165,13 @@ class ValidateBookTests(unittest.TestCase):
             "project_types": [{"path": ".", "types": ["service"]}],
             "entrypoints": ["src/app.py"],
             "chapter_sources": {chapter: ["src/app.py"] for chapter in validate_book.CHAPTERS},
+            "diagrams": diagrams,
             "validation": {
                 "paths": {"status": "passed", "reason": None},
                 "markdown": {"status": "passed", "reason": None},
                 "placeholders": {"status": "passed", "reason": None},
                 "secrets": {"status": "passed", "reason": None},
+                "diagrams": {"status": "static", "reason": "Renderer unavailable."},
                 "examples": {
                     "status": "passed",
                     "reason": "syntax check",
@@ -279,6 +334,79 @@ class ValidateBookTests(unittest.TestCase):
             self.assertIn("requires a command", joined)
             self.assertIn("requires exit_code 0", joined)
             self.assertIn("requires level", joined)
+
+    def test_full_mode_requires_all_core_diagram_roles(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            book = self.make_book(repo)
+            manifest_path = book / ".learning-manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["diagrams"] = [
+                entry for entry in manifest["diagrams"] if entry["role"] != "runtime_deployment"
+            ]
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            result = validate_book.validate(repo, book)
+            self.assertIn("full mode missing required diagram role: runtime_deployment", result.errors)
+
+    def test_unregistered_mermaid_block_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            book = self.make_book(repo)
+            chapter = book / "05-core-concepts.md"
+            chapter.write_text(
+                chapter.read_text(encoding="utf-8")
+                + "\n```mermaid\nclassDiagram\n    class App\n```\n",
+                encoding="utf-8",
+            )
+            result = validate_book.validate(repo, book)
+            self.assertIn("unregistered Mermaid block in 05-core-concepts.md", result.errors)
+
+    def test_diagram_complexity_and_sources_are_enforced(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            book = self.make_book(repo)
+            manifest_path = book / ".learning-manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["diagrams"][0]["node_count"] = 13
+            manifest["diagrams"][0]["edge_count"] = 19
+            manifest["diagrams"][0]["sources"] = ["missing.py"]
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            result = validate_book.validate(repo, book)
+            joined = "\n".join(result.errors)
+            self.assertIn("missing diagram source", joined)
+            self.assertIn("node_count must be between 1 and 12", joined)
+            self.assertIn("edge_count must be between 0 and 18", joined)
+
+    def test_not_applicable_diagram_requires_reason_and_zero_counts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            book = self.make_book(repo)
+            manifest_path = book / ".learning-manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            deployment = next(
+                entry for entry in manifest["diagrams"] if entry["role"] == "runtime_deployment"
+            )
+            deployment["reason"] = ""
+            deployment["node_count"] = 1
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            result = validate_book.validate(repo, book)
+            joined = "\n".join(result.errors)
+            self.assertIn("not_applicable diagram requires a reason", joined)
+            self.assertIn("not_applicable diagram must have empty sources and zero counts", joined)
+
+    def test_passed_diagram_validation_requires_render_proof(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            book = self.make_book(repo)
+            manifest_path = book / ".learning-manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["validation"]["diagrams"] = {"status": "passed", "reason": None}
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            result = validate_book.validate(repo, book)
+            joined = "\n".join(result.errors)
+            self.assertIn("requires a renderer command", joined)
+            self.assertIn("requires exit_code 0", joined)
+            self.assertIn("requires level render", joined)
 
     def test_fast_mode_requires_validated_example(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -35,9 +35,28 @@ REQUIRED_MANIFEST_KEYS = {
     "project_types",
     "entrypoints",
     "chapter_sources",
+    "diagrams",
     "validation",
 }
 ALLOWED_STATES = {"passed", "failed", "static", "not_run"}
+DIAGRAM_ROLES = {
+    "system_structure": {"context", "component"},
+    "runtime_deployment": {"deployment"},
+    "core_flow": {"sequence"},
+    "domain_model": {"class"},
+    "lifecycle": {"state"},
+}
+REQUIRED_DIAGRAM_ROLES = {
+    "full": {"system_structure", "runtime_deployment", "core_flow"},
+    "fast": {"system_structure", "core_flow"},
+    "targeted": set(),
+}
+DIAGRAM_STATUSES = {"passed", "static", "not_applicable"}
+DIAGRAM_ID_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+MERMAID_BLOCK_RE = re.compile(
+    r"(?ms)(?:<!--\s*diagram:([^>]+?)\s*-->\s*\r?\n)?"
+    r"^[ \t]*```mermaid[ \t]*\r?\n(.*?)^[ \t]*```[ \t]*$"
+)
 PLACEHOLDER_RE = re.compile(r"\[(?:项目|路径|文件|模块|参数|组件|类型|请替换|入口|基类|注册)[^\]]*\]")
 INLINE_CODE_RE = re.compile(r"`([^`\n]+)`")
 EVIDENCE_SUFFIX_RE = re.compile(r"^(.+):([1-9][0-9]*)$")
@@ -150,6 +169,155 @@ def _evidence_references(text: str) -> list[tuple[str, int]]:
             continue
         references.append((raw_path.replace("\\", "/"), int(line_number)))
     return references
+
+
+def _mermaid_blocks(text: str) -> list[tuple[str | None, str]]:
+    return [
+        (match.group(1).strip() if match.group(1) else None, match.group(2))
+        for match in MERMAID_BLOCK_RE.finditer(text)
+    ]
+
+
+def _mermaid_type(body: str) -> str | None:
+    first_line = next((line.strip() for line in body.splitlines() if line.strip()), "")
+    if first_line.startswith(("flowchart", "graph")):
+        return "flowchart"
+    if first_line == "sequenceDiagram":
+        return "sequence"
+    if first_line == "classDiagram":
+        return "class"
+    if first_line.startswith("stateDiagram"):
+        return "state"
+    return None
+
+
+def _validate_diagrams(
+    repo: Path,
+    book: Path,
+    manifest: dict,
+    effective_mode: str,
+    required_chapters: list[str],
+    chapter_sources: dict,
+    errors: list[str],
+    warnings: list[str],
+) -> None:
+    diagrams = manifest.get("diagrams")
+    if not isinstance(diagrams, list):
+        errors.append("diagrams must be a list")
+        return
+
+    active_entries: list[dict] = []
+    seen_ids: set[str] = set()
+    for index, entry in enumerate(diagrams):
+        if not isinstance(entry, dict):
+            errors.append(f"invalid diagrams entry at index {index}")
+            continue
+        chapter = entry.get("chapter")
+        if effective_mode == "targeted" and chapter not in required_chapters:
+            continue
+        active_entries.append(entry)
+        diagram_id = entry.get("id")
+        if not isinstance(diagram_id, str) or not DIAGRAM_ID_RE.fullmatch(diagram_id):
+            errors.append(f"diagram id must be lowercase kebab-case at index {index}")
+        elif diagram_id in seen_ids:
+            errors.append(f"duplicate diagram id: {diagram_id}")
+        else:
+            seen_ids.add(diagram_id)
+
+        if chapter not in CHAPTERS:
+            errors.append(f"invalid diagram chapter for {diagram_id!r}: {chapter!r}")
+        role = entry.get("role")
+        diagram_type = entry.get("type")
+        if role not in DIAGRAM_ROLES:
+            errors.append(f"invalid diagram role for {diagram_id!r}: {role!r}")
+        elif diagram_type not in DIAGRAM_ROLES[role]:
+            errors.append(f"diagram type {diagram_type!r} is incompatible with role {role!r}: {diagram_id!r}")
+        status = entry.get("status")
+        if status not in DIAGRAM_STATUSES:
+            errors.append(f"invalid diagram status for {diagram_id!r}: {status!r}")
+        purpose = entry.get("purpose")
+        if not isinstance(purpose, str) or not purpose.strip():
+            errors.append(f"diagram requires a purpose: {diagram_id!r}")
+
+        sources = entry.get("sources")
+        node_count = entry.get("node_count")
+        edge_count = entry.get("edge_count")
+        if status == "not_applicable":
+            if not isinstance(entry.get("reason"), str) or not entry["reason"].strip():
+                errors.append(f"not_applicable diagram requires a reason: {diagram_id!r}")
+            if sources != [] or node_count != 0 or edge_count != 0:
+                errors.append(f"not_applicable diagram must have empty sources and zero counts: {diagram_id!r}")
+            continue
+
+        if not isinstance(sources, list) or not sources:
+            errors.append(f"diagram requires source files: {diagram_id!r}")
+        else:
+            declared = {
+                source.replace("\\", "/")
+                for source in chapter_sources.get(chapter, [])
+                if isinstance(source, str)
+            } if isinstance(chapter_sources, dict) else set()
+            for source in sources:
+                if not isinstance(source, str) or not (repo / source).is_file():
+                    errors.append(f"missing diagram source for {diagram_id!r}: {source!r}")
+                elif source.replace("\\", "/") not in declared:
+                    errors.append(f"diagram source not declared in chapter_sources for {diagram_id!r}: {source}")
+        if not isinstance(node_count, int) or isinstance(node_count, bool) or not 1 <= node_count <= 12:
+            errors.append(f"diagram node_count must be between 1 and 12: {diagram_id!r}")
+        if not isinstance(edge_count, int) or isinstance(edge_count, bool) or not 0 <= edge_count <= 18:
+            errors.append(f"diagram edge_count must be between 0 and 18: {diagram_id!r}")
+
+    blocks: dict[str, tuple[str, str]] = {}
+    for chapter in required_chapters:
+        chapter_path = book / chapter
+        if not chapter_path.is_file():
+            continue
+        for diagram_id, body in _mermaid_blocks(chapter_path.read_text(encoding="utf-8-sig")):
+            if diagram_id is None:
+                errors.append(f"unregistered Mermaid block in {chapter}")
+                continue
+            if not DIAGRAM_ID_RE.fullmatch(diagram_id):
+                errors.append(f"Mermaid diagram id must be lowercase kebab-case in {chapter}: {diagram_id}")
+            if diagram_id in blocks:
+                errors.append(f"duplicate Mermaid diagram id: {diagram_id}")
+            else:
+                blocks[diagram_id] = (chapter, body)
+
+    entry_by_id = {
+        entry["id"]: entry
+        for entry in active_entries
+        if isinstance(entry.get("id"), str) and DIAGRAM_ID_RE.fullmatch(entry["id"])
+    }
+    for diagram_id, (chapter, body) in blocks.items():
+        entry = entry_by_id.get(diagram_id)
+        if entry is None:
+            errors.append(f"Mermaid block missing manifest entry: {diagram_id}")
+            continue
+        if entry.get("status") == "not_applicable":
+            errors.append(f"not_applicable diagram must not have a Mermaid block: {diagram_id}")
+        if entry.get("chapter") != chapter:
+            errors.append(f"diagram chapter does not match Mermaid block: {diagram_id}")
+        detected_type = _mermaid_type(body)
+        expected_type = entry.get("type")
+        if detected_type is None:
+            errors.append(f"unsupported Mermaid directive: {diagram_id}")
+        elif detected_type == "flowchart":
+            if expected_type not in {"context", "component", "deployment"}:
+                errors.append(f"Mermaid directive does not match diagram type: {diagram_id}")
+        elif detected_type != expected_type:
+            errors.append(f"Mermaid directive does not match diagram type: {diagram_id}")
+
+    for entry in active_entries:
+        diagram_id = entry.get("id")
+        if entry.get("status") != "not_applicable" and isinstance(diagram_id, str) and diagram_id not in blocks:
+            errors.append(f"diagram manifest entry missing Mermaid block: {diagram_id}")
+
+    roles = {entry.get("role") for entry in active_entries}
+    for role in sorted(REQUIRED_DIAGRAM_ROLES[effective_mode] - roles):
+        errors.append(f"{effective_mode} mode missing required diagram role: {role}")
+    actual_count = sum(entry.get("status") != "not_applicable" for entry in active_entries)
+    if effective_mode == "fast" and actual_count > 2:
+        warnings.append("fast mode should normally contain no more than two actual diagrams")
 
 
 def validate(repo: Path, book: Path, *, mode: str | None = None, targets: list[str] | None = None) -> Result:
@@ -327,6 +495,17 @@ def validate(repo: Path, book: Path, *, mode: str | None = None, targets: list[s
                         f"inline evidence not declared in chapter_sources for {chapter}: {undeclared}"
                     )
 
+        _validate_diagrams(
+            repo,
+            book,
+            manifest,
+            effective_mode,
+            required_chapters,
+            sources,
+            errors,
+            warnings,
+        )
+
         for entrypoint in manifest.get("entrypoints", []):
             if not isinstance(entrypoint, str) or not (repo / entrypoint).is_file():
                 errors.append(f"missing manifest entrypoint: {entrypoint!r}")
@@ -341,7 +520,7 @@ def validate(repo: Path, book: Path, *, mode: str | None = None, targets: list[s
                     errors.append(f"missing subproject manifest: {source_manifest!r}")
 
         validation = manifest.get("validation", {})
-        for name in ("paths", "markdown", "placeholders", "secrets", "examples"):
+        for name in ("paths", "markdown", "placeholders", "secrets", "diagrams", "examples"):
             item = validation.get(name) if isinstance(validation, dict) else None
             state = item.get("status") if isinstance(item, dict) else None
             if state not in ALLOWED_STATES:
@@ -364,6 +543,22 @@ def validate(repo: Path, book: Path, *, mode: str | None = None, targets: list[s
             errors.append("fast mode requires at least one syntax-validated example")
         elif example_state in {"static", "not_run"}:
             warnings.append("examples are not runtime-verified; do not call them runnable")
+
+        diagram_item = validation.get("diagrams", {}) if isinstance(validation, dict) else {}
+        diagram_state = diagram_item.get("status") if isinstance(diagram_item, dict) else None
+        if diagram_state == "passed":
+            command = diagram_item.get("command")
+            exit_code = diagram_item.get("exit_code")
+            level = diagram_item.get("level")
+            if not isinstance(command, str) or not command.strip():
+                errors.append("passed diagram validation requires a renderer command")
+            if not isinstance(exit_code, int) or isinstance(exit_code, bool) or exit_code != 0:
+                errors.append("passed diagram validation requires exit_code 0")
+            if level != "render":
+                errors.append("passed diagram validation requires level render")
+        elif diagram_state == "static":
+            if not isinstance(diagram_item.get("reason"), str) or not diagram_item["reason"].strip():
+                errors.append("static diagram validation requires a reason")
 
     return Result(errors=list(dict.fromkeys(errors)), warnings=list(dict.fromkeys(warnings)))
 

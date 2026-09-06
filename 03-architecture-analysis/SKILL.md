@@ -5,7 +5,7 @@ description: Analyze module boundaries, runtime processes, dependencies, deploym
 
 # Architecture analysis
 
-Turn the repository inventory into a verified static, runtime, and deployment model. Read `../references/output-contract.md` and `../references/evidence-and-safety.md` first.
+Turn the repository inventory into a verified static, runtime, and deployment model. Read `../references/output-contract.md`, `../references/evidence-and-safety.md`, and `../references/diagram-contract.md` first.
 
 ## Analysis workflow
 
@@ -30,11 +30,12 @@ Write `project-book/03-architecture.md` with:
 - architectural decisions, tradeoffs, risks, and known unknowns;
 - evidence index.
 
-Use Mermaid only when it materially clarifies relationships and keep node names identical to source/deployment names. Update `chapter_sources`.
+Create or explicitly account for the `system_structure` and `runtime_deployment` diagram roles according to the selected mode. Use source/deployment names, the required diagram ID comment, evidence index, readability limits, and manifest entries from the diagram contract. Update `chapter_sources`.
 
 ## Acceptance
 
 - Every component shown exists and every important edge has `path:line` evidence.
+- Every expected diagram role is present or has an evidenced `not_applicable` reason.
 - Static structure, runtime interaction, and deployment are not conflated.
 - Hybrid repositories show subsystem-specific architecture plus integration points.
 - Unknowns and inferred intent are labeled rather than presented as fact.

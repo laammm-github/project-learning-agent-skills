@@ -17,4 +17,4 @@ project-book/
 └── 10-learning-checklist.md     # coverage, validation, and practice checklist
 ```
 
-Every chapter must state its analysis baseline, use repository-relative `path:line` evidence, and distinguish `已运行`, `静态验证`, `静态推断`, and `未运行`.
+Every chapter must state its analysis baseline, use repository-relative `path:line` evidence, and distinguish `已运行`, `静态验证`, `静态推断`, and `未运行`. Diagrams use stable `<!-- diagram:kebab-case-id -->` markers, evidence indexes, and matching manifest entries from `references/diagram-contract.md`.

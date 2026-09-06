@@ -5,7 +5,7 @@ description: Semantically review project learning material, generate the FAQ and
 
 # Learning review
 
-Read `../references/output-contract.md` and `../references/evidence-and-safety.md`. Review chapter meaning and evidence; keyword presence is not proof of coverage.
+Read `../references/output-contract.md`, `../references/evidence-and-safety.md`, and `../references/diagram-contract.md`. Review chapter meaning and evidence; keyword presence is not proof of coverage.
 
 ## Review workflow
 
@@ -13,9 +13,10 @@ Read `../references/output-contract.md` and `../references/evidence-and-safety.m
 2. For each criterion record `covered`, `partial`, `unknown`, or `not_applicable`, with the chapter and source evidence.
 3. Cross-check architecture against at least one flow, contracts against examples, installation against manifests, and all cited paths against the repository.
 4. Identify contradictions, unsupported certainty, stale Git baselines, missing failure paths, unverified commands, and secret exposure.
-5. Generate `project-book/09-faq.md` from real points of confusion and known gaps.
-6. Generate `project-book/10-learning-checklist.md` with coverage, validation results, known unknowns, contribution-readiness tasks, and next learning steps.
-7. Update all manifest validation statuses, then run `../scripts/validate_book.py <repo> --mode <mode>`. Fix deterministic errors or report them explicitly.
+5. Review every diagram semantically: state its learning question, verify each node and important edge against its evidence index, confirm role/type applicability and readability limits, and reject decorative or auto-generated inventories.
+6. Generate `project-book/09-faq.md` from real points of confusion and known gaps.
+7. Generate `project-book/10-learning-checklist.md` with coverage, validation results, known unknowns, contribution-readiness tasks, and next learning steps.
+8. Update all manifest validation statuses, then run `../scripts/validate_book.py <repo> --mode <mode>`. Fix deterministic errors or report them explicitly.
 
 ## Output rules
 
@@ -23,6 +24,7 @@ Read `../references/output-contract.md` and `../references/evidence-and-safety.m
 - Targeted mode checks the manifest and target chapters while preserving unrelated files.
 - FAQ answers need evidence or an explicit inference/unknown label.
 - A file existing or containing a word does not satisfy a learning objective.
+- A syntactically valid diagram does not satisfy a learning objective unless its nodes and edges are evidenced.
 
 ## Acceptance
 

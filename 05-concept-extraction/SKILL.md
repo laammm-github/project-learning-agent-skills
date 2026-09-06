@@ -5,7 +5,7 @@ description: Extract real abstractions, contracts, invariants, and extension poi
 
 # Concept and contract extraction
 
-Read `../references/output-contract.md`. Use architecture and flow evidence to select concepts that explain how the project is designed.
+Read `../references/output-contract.md` and `../references/diagram-contract.md`. Use architecture and flow evidence to select concepts that explain how the project is designed.
 
 ## Analysis
 
@@ -17,7 +17,7 @@ Read `../references/output-contract.md`. Use architecture and flow evidence to s
 
 ## Output
 
-Write `project-book/05-core-concepts.md` with key concepts, contracts/invariants, concept relationships, extension points, common misconceptions, and evidence index. Update `chapter_sources`.
+Write `project-book/05-core-concepts.md` with key concepts, contracts/invariants, concept relationships, extension points, common misconceptions, and evidence index. Add a focused `domain_model` or `lifecycle` diagram only when the applicability thresholds in the diagram contract are met; otherwise prose is preferred. Update `chapter_sources` and diagram manifest entries.
 
 ## Acceptance
 

@@ -11,6 +11,7 @@ Create trustworthy learning material from the repository as it exists now. Prese
 
 - Read [references/output-contract.md](references/output-contract.md) before creating or validating output.
 - Read [references/evidence-and-safety.md](references/evidence-and-safety.md) before inspecting configuration, running commands, or updating an existing book.
+- Read [references/diagram-contract.md](references/diagram-contract.md) whenever architecture, flow, concept, or lifecycle diagrams are in scope.
 - Read only the child skills needed by the selected mode. A full or fast run uses all eight; a targeted run uses the requested child and its dependencies.
 
 ## Modes
@@ -56,9 +57,10 @@ Dependencies may be analyzed in memory during a targeted run, but only requested
 1. Run the selected child skills in dependency order.
 2. Write every chapter directly under `project-book/`; never use `docs/analysis/`.
 3. Cite material claims with repository-relative `path:line` evidence. Mark unsupported conclusions `静态推断` and commands not executed `未运行`.
-4. Update the manifest after chapter generation. `chapter_sources` must list the evidence files used by each changed chapter. In targeted mode, retain the pre-write `preservation` baseline unchanged so validation can detect unrelated edits.
-5. Run `scripts/validate_book.py <repo> --mode <mode>` and fix deterministic failures before delivery.
-6. Report validation failures that cannot safely be fixed. Do not claim the book or an example is verified when it was not run.
+4. Select diagrams by learning question and follow the diagram contract. Every actual node and edge needs source evidence; record omitted expected views as `not_applicable` rather than inventing structure.
+5. Update the manifest after chapter generation. `chapter_sources` must list the evidence files used by each changed chapter. In targeted mode, retain the pre-write `preservation` baseline unchanged so validation can detect unrelated edits.
+6. Run `scripts/validate_book.py <repo> --mode <mode>` and fix deterministic failures before delivery.
+7. Report validation failures that cannot safely be fixed. Do not claim the book, diagram rendering, or an example is verified when it was not run.
 
 ## Child skill routing
 
@@ -73,6 +75,6 @@ Dependencies may be analyzed in memory during a targeted run, but only requested
 
 ## Completion
 
-A run is complete only when required chapters and the manifest exist, changed claims have evidence, secrets are absent, examples have explicit validation status, and the validator has no errors. Keep automatic discovery behavior unchanged; this skill does not create `agents/openai.yaml`.
+A run is complete only when required chapters and the manifest exist, changed claims and diagrams have evidence, secrets are absent, examples and diagrams have explicit validation status, and the validator has no errors. Keep automatic discovery behavior unchanged; this skill does not create `agents/openai.yaml`.
 
 For skill maintenance, run `python scripts/self_check.py`; it validates the root plus eight child skills and executes the cross-platform script tests.

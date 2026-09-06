@@ -5,7 +5,7 @@ description: Trace representative end-to-end code and data flows with transforma
 
 # Code flow analysis
 
-Read `../references/output-contract.md`; require repository discovery and architecture context before selecting a flow.
+Read `../references/output-contract.md` and `../references/diagram-contract.md`; require repository discovery and architecture context before selecting a flow.
 
 ## Flow selection
 
@@ -31,11 +31,12 @@ Follow alternate and failure paths far enough to explain externally visible beha
 
 ## Output
 
-Write `project-book/04-core-flow.md` with selection rationale, sequence diagram, step-by-step transformations, persistence/events, key context propagation, error/cancellation paths, evidence, and known unknowns. Update `chapter_sources`.
+Write `project-book/04-core-flow.md` with selection rationale, one sequence view per selected representative flow when applicable, step-by-step transformations, persistence/events, key context propagation, error/cancellation paths, evidence, and known unknowns. Follow the diagram block and manifest contract; update `chapter_sources`.
 
 ## Acceptance
 
 - Each arrow maps to a real call, message, event, or persisted transition.
+- Each sequence view shows the initiator, sync/async boundaries, return behavior, and an applicable failure, timeout, or cancellation path.
 - Input → transformation → output is explicit at every important boundary.
 - At least one failure path is covered per flow.
 - Static-only conclusions are labeled `静态推断`.

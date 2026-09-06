@@ -57,11 +57,29 @@ Write valid JSON with this shape:
   "chapter_sources": {
     "01-project-overview.md": ["README.md", "pyproject.toml"]
   },
+  "diagrams": [
+    {
+      "id": "request-execution-sequence",
+      "chapter": "04-core-flow.md",
+      "role": "core_flow",
+      "type": "sequence",
+      "status": "static",
+      "purpose": "Explain how a request reaches a persisted result.",
+      "sources": ["src/app.py"],
+      "node_count": 4,
+      "edge_count": 6,
+      "reason": "Renderer unavailable; deterministic checks passed."
+    }
+  ],
   "validation": {
     "paths": {"status": "passed", "reason": null},
     "markdown": {"status": "passed", "reason": null},
     "placeholders": {"status": "passed", "reason": null},
     "secrets": {"status": "passed", "reason": null},
+    "diagrams": {
+      "status": "static",
+      "reason": "Diagram metadata and Mermaid mapping were checked; renderer unavailable."
+    },
     "examples": {
       "status": "passed",
       "reason": "Python syntax validation",
@@ -73,7 +91,9 @@ Write valid JSON with this shape:
 }
 ```
 
-Allowed validation states are `passed`, `failed`, `static`, and `not_run`. A passed example validation must record `command`, integer `exit_code: 0`, and `level` (`syntax`, `type`, `test`, or `runtime`). A null `head_sha` is valid outside Git. In Git repositories, `head_sha` is the analyzed source baseline; later commits that change only `project-book/` do not invalidate it. Use repository-relative POSIX-style paths even on Windows; paths may contain spaces.
+Allowed validation states are `passed`, `failed`, `static`, and `not_run`. A passed example validation must record `command`, integer `exit_code: 0`, and `level` (`syntax`, `type`, `test`, or `runtime`). A passed diagram validation must record the renderer `command`, integer `exit_code: 0`, and `level: "render"`; static validation must explain why rendering was not run. A null `head_sha` is valid outside Git. In Git repositories, `head_sha` is the analyzed source baseline; later commits that change only `project-book/` do not invalidate it. Use repository-relative POSIX-style paths even on Windows; paths may contain spaces.
+
+The top-level `diagrams` array follows [diagram-contract.md](diagram-contract.md). Full mode accounts for `system_structure`, `runtime_deployment`, and `core_flow`; fast mode accounts for `system_structure` and `core_flow`. A role may be `not_applicable` only with a concrete reason. Targeted mode validates diagram entries for target chapters and preserves unrelated entries.
 
 ## Evidence format
 
@@ -88,9 +108,9 @@ Allowed validation states are `passed`, `failed`, `static`, and `not_run`. A pas
 
 1. Overview: repository shape, subsystem types, manifests, entrypoints, technology stack, and reading route.
 2. Installation: prerequisites, official commands, configuration precedence, variable names, and verification status.
-3. Architecture: module boundaries, dependency direction, runtime processes, deployment, cross-cutting concerns, decisions, and risks.
-4. Core flow: one to three representative flows with input, transformation, output, persistence, and failures.
-5. Concepts: real abstractions, contracts, invariants, extension points, and code evidence.
+3. Architecture: module boundaries, dependency direction, runtime processes, deployment, cross-cutting concerns, decisions, risks, and required structure/deployment diagram roles.
+4. Core flow: one to three representative flows with input, transformation, output, persistence, failures, and an applicable sequence view for each selected flow.
+5. Concepts: real abstractions, contracts, invariants, extension points, code evidence, and focused class/state views only when applicable.
 6. Source guide: goal-oriented reading paths from entrypoint to contract to implementation.
 7. Extension guide: project-specific steps, registration, tests, and compatibility constraints.
 8. Examples: project-native illustrative and runnable examples with explicit validation status.
