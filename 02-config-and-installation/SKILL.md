@@ -1,185 +1,109 @@
 ---
 name: 02-config-and-installation
-description: 分析配置系统、环境变量映射、安装步骤，生成配置与安装指南
+description: 分析安装步骤、配置加载优先级与环境变量名（不输出密钥值），生成 project-book/02-installation.md
 ---
 
 # 02-Config & Installation — 安装与配置
 
-> 目标：分析配置系统，生成安装步骤和配置指南
+> 目标：让读者能按文档把项目跑起来，并理解配置从哪来、谁覆盖谁。
 
----
+必读：[../references/output-contract.md](../references/output-contract.md)、[../references/evidence-and-safety.md](../references/evidence-and-safety.md)（本技能涉及配置检查与安全执行，必须先读）。
+
+## 密钥安全（硬性规则）
+
+- 只输出**变量名、非敏感默认值、加载优先级**；严禁复制真实 `.env`、凭据存储、shell 环境或 CI secrets 中的值。
+- 优先读取 `.env.example`、`.env.default`、schema 定义和设置代码，而不是真实 `.env`。
+- 可疑值一律写 `<redacted>`；含凭据的连接串只保留协议与主机结构，凭据部分打码。
+- 不要为了发现变量名而打印整个环境或配置文件。
 
 ## 职责
 
-分析项目的配置系统，输出：
-- 配置加载流程
-- 环境变量映射
-- 安装步骤
-- 配置示例
-
----
+输出：
+- 环境要求与官方安装步骤（标注验证状态）
+- 配置加载流程与优先级（默认值 → 配置文件 → 环境变量 → 命令行）
+- 环境变量映射表（变量名 → 作用 → 定义位置）
+- 常见配置场景示例（脱敏）
 
 ## 执行流程
 
 ### Step 1：识别配置系统
 
 ```bash
-# 查找配置文件
-find . -name "config.json" -o -name "config.py" -o -name "config-template.json" -o -name ".env.example" | head -10
-
-# 查找环境变量定义
-grep -r "os.environ\|os.getenv\|environ" --include="*.py" | head -20
+rg -n "\.env|config|settings" --glob "*.{py,ts,js,go,rs,java}" -l
+rg --files -g ".env.example" -g "*.toml" -g "*.yaml" -g "docker-compose*"
 ```
 
-### Step 2：分析配置加载流程
+找到：配置文件格式（JSON/YAML/TOML/INI/.env）、配置模块位置、模板文件。
 
-典型配置加载流程（根据项目调整）：
+### Step 2：分析配置加载流程与优先级
 
-```python
-# 示例：通用配置加载模式
-# 文件位置：config.py 或 equivalent
+打开配置模块源码，确认实际加载顺序与覆盖规则（例如 `config.py:34` 中 env 覆盖文件值），画出优先级链：
 
-def load_config():
-    # 加载流程：
-    # 1. 读取默认配置（模板文件/硬编码默认值）
-    # 2. 读取用户配置（JSON/YAML/ENV 文件）
-    # 3. 合并配置（用户配置覆盖默认值）
-    # 4. 注入环境变量（API Key 等敏感信息）
-    # 5. 返回统一配置对象
-    config = merge_config(defaults, user_config, env_vars)
-    return config
+```text
+硬编码默认值 → 配置模板/文件 → 环境变量 → 命令行参数（后者覆盖前者）
 ```
 
-输出：`installation.md` 的"配置系统"章节
+每一级标注证据 `文件:行号`；仅从代码结构推断、未运行验证的结论标注「静态推断」。
 
 ### Step 3：提取环境变量映射
 
-典型映射模式（根据项目调整）：
+从 `.env.example`、schema 或设置代码提取变量清单：
 
-```python
-# 示例：环境变量映射模式
-# 配置文件中的 key → 环境变量名
+| 变量名 | 作用 | 默认值（非敏感） | 定义位置 |
+| --- | --- | --- | --- |
+| 示例：DATABASE_URL | 主数据库连接 | 无（必填，值 `<redacted>`） | `app/settings.py:21` |
 
-_CONFIG_TO_ENV = {
-    "api_key": "API_KEY",           # 示例：API 密钥
-    "database_url": "DATABASE_URL", # 示例：数据库连接
-    "secret": "SECRET",             # 示例：应用密钥
-}
-```
+### Step 4：整理安装步骤
 
-输出：`installation.md` 的"环境变量"章节
+命令必须来自官方文档、manifest scripts 或 Dockerfile，标注来源与验证状态：
+- 本次实际执行成功 → 「已运行」+ 原始命令
+- 只做语法/静态检查 → 「静态验证」
+- 未执行（安装依赖、启动容器等需用户授权）→ 「未运行」+ 原因
 
-### Step 4：生成安装步骤
+### Step 5：写入章节与 manifest
 
-结构（根据项目语言调整命令）：
-
-```markdown
-## 安装步骤
-
-### 1. 环境要求
-- [语言版本]（如 Python 3.7+、Node.js 14+ 等）
-
-### 2. 安装依赖
-```bash
-# Python
-pip install -r requirements.txt
-# Node
-npm install
-# Go
-go mod download
-```
-
-### 3. 配置环境
-```bash
-# 复制配置模板
-cp config-template.json config.json  # 或 .env.example → .env
-
-# 设置环境变量
-export [ENV_VAR_NAME]="your_value"
-```
-
-### 4. 启动项目
-```bash
-[项目启动命令]
-```
-```
-
-### Step 5：生成配置示例
-
-```json
-{
-  // 示例 1：切换组件/后端/模型
-  "[组件名]": "[组件标识]",
-  
-  // 示例 2：多组件/多通道
-  "[组件类型]": "[组件 1],[组件 2]",
-  
-  // 示例 3：多实例/多工作区
-  "[实例名]": [
-    {"id": "default", "name": "Default", "workspace": "~/[项目]"},
-    {"id": "custom", "name": "Custom", "workspace": "~/[项目]-custom"}
-  ]
-}
-```
-
-### Step 6：生成 installation.md
-
-结构：
+生成 `project-book/02-installation.md`，结构（占位符交付前必须全部替换）：
 
 ```markdown
 # 安装与配置指南
 
 ## 环境要求
-- 语言版本
-- 依赖包
+语言版本、系统依赖（证据：manifest/CI 配置）。
 
 ## 安装步骤
-1. [步骤 1]
-2. [步骤 2]
-...
+1. 步骤 + 命令 + 来源与验证状态
+2. ...
 
 ## 配置系统
+### 配置格式与文件位置
+### 配置加载流程与优先级（每级带证据）
+### 环境变量映射表（只有变量名，无真实值）
+### 常见配置场景（脱敏示例）
 
-### 配置格式
-- [JSON/YAML/INI]
-
-### 配置加载流程
-[流程图或步骤说明]
-
-### 环境变量
-| 配置项 | 环境变量 | 说明 |
-|--------|---------|------|
-| api_key | API_KEY | [说明] |
-| database_url | DATABASE_URL | [说明] |
-
-### 配置示例
-[常用配置场景]
+## 验证安装
+如何确认服务正常启动（健康检查端点/命令），未执行的标注「未运行」。
 
 ## 常见问题
-- Q: 如何切换 [组件/模型/后端]？
-- A: [步骤说明]
+配置相关的真实坑（来自代码中的报错处理/文档警告）。
 ```
 
----
+更新 manifest：本章 `chapter_sources`（含引用过的配置文件与源码；**不要把真实 `.env` 列入**）。
 
 ## 输出物
 
 - `project-book/02-installation.md`
 
----
-
 ## 质量检查
 
 ```
-✓ 安装步骤是否可执行（按步骤能跑起来）？
-✓ 环境变量映射是否完整？
-✓ 配置示例是否覆盖常见场景？
-✓ 配置加载流程是否清晰？
+✓ 安装命令是否都有来源，且验证状态标注正确？
+✓ 配置优先级是否有代码证据，而不是想当然？
+✓ 环境变量表是否只有变量名与非敏感默认值？
+✓ 是否无任何真实密钥/凭据/连接串密码（可疑值已 <redacted>）？
+✓ 占位符是否已全部替换？
 ```
-
----
 
 ## 参考
 
-- 你的"项目学习 Skill"中的配置系统专项学习
-- Supabase Agent Skills 工程组织方式
+- [../references/evidence-and-safety.md](../references/evidence-and-safety.md)
+- [../references/output-contract.md](../references/output-contract.md)

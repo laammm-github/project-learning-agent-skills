@@ -1,227 +1,115 @@
 ---
 name: 05-concept-extraction
-description: 从代码中提取核心设计概念、抽象和契约，而非解释代码细节
+description: 从源码提取真实抽象、契约、不变量与扩展点，生成 project-book/05-core-concepts.md，按需配类图与状态图
 ---
 
 # 05-Concept Extraction — 概念提取
 
-> 目标：从代码中提取设计概念，而非解释代码细节
+> 目标：把源码转化为读者可迁移的心智模型——项目定义了哪些核心抽象、它们承诺了什么、在哪里扩展。
 
----
+必读：[../references/output-contract.md](../references/output-contract.md)、[../references/evidence-and-safety.md](../references/evidence-and-safety.md)、[../references/diagram-contract.md](../references/diagram-contract.md)（类图/状态图规则）。
 
 ## 职责
 
-将源码转化为人类可理解的设计概念：
-- 核心抽象提炼
-- 设计契约说明
-- 概念关系图
-- 类比理解（用现实世界类比）
+输出：
+- 核心抽象（真实的类/接口/trait/schema，摘录关键签名，带 `文件:行号`）
+- 设计契约（必须实现什么、数据格式约定、例外场景）
+- 不变量（代码中强制维持的规则：唯一性、状态约束、边界检查）
+- 扩展点（框架预留的注册/继承/插件位置）
+- 类比理解（帮助记忆，但类比不能替代代码证据）
+- 按需的 `domain_model` 类图与 `lifecycle` 状态图
 
----
+**纪律**：只提取**真实存在**的抽象。本技能内出现的任何示例基类只是格式参考，不得写入教材；每个概念必须能在源码中搜到。
 
 ## 执行流程
 
 ### Step 1：识别核心抽象
 
-找出项目中最重要的抽象，使用**真实代码**而非伪代码，替换 `[语言]` 为项目实际语言：
+从 03 的模块边界和 04 的链路出发，找被多处依赖的类型/接口：
 
-```python
-# 示例（Python 项目）：常见抽象基类模式
-# 文件位置：请替换为实际路径，如 base.py:12、interface.rs:45
-
-class BaseClass(object):
-    # 类属性（必须由子类覆盖）
-    class_type = ""           # 类型标识（如 "web", "file", "api"）
-    supported_features = []   # 支持的功能列表
-    
-    def startup(self):        # 初始化（必须实现）
-        raise NotImplementedError
-    
-    def stop(self):           # 清理（可选）
-        pass
-    
-    def process(self, input_data):  # 核心处理（必须实现）
-        raise NotImplementedError
-    
-    def output(self, result):   # 输出结果（必须实现）
-        raise NotImplementedError
+```bash
+rg -n "class .*(Base|Abstract|Interface|Protocol)" --type py
+rg -n "interface |abstract class " --type ts
 ```
 
-**提取的概念**：
-
-```
-BaseClass = "[抽象名称] 的契约定义"
-作用：定义所有实现类必须遵循的接口
-类比：[项目相关的现实类比]
-位置：[文件路径:行号]
-```
-
-> **通用化提示**：根据项目类型调整类名和方法名：
-> - Web 框架：Controller（处理请求）
-> - 消息系统：Broker（路由消息）
-> - CLI 工具：Command（执行命令）
-> - Agent 框架：Tool（调用外部能力）
+对每个核心抽象：摘录真实签名（关键方法 + 类型注解），标注 `文件:行号`，列出已知实现类及其位置。
 
 ### Step 2：提炼设计契约
 
-每个核心类/接口，说明：
-- **契约**：必须实现什么
-- **约定**：数据格式规范
-- **例外**：特殊处理场景
+每个核心抽象写清：
+- **必须实现**：抽象方法/必填字段（证据：NotImplementedError、abstract 标记、schema required）
+- **约定**：输入输出格式、命名/注册规则
+- **例外**：可选行为、默认实现、特殊分支
 
-```python
-# 示例（Python 项目）：通用扩展点模式
-# 文件位置：请替换为实际路径
+### Step 3：提取不变量
 
-class BaseExtension:
-    # 必须定义的属性
-    name: str = "base_extension"        # 扩展名称
-    version: str = "1.0"                # 版本号
-    description: str = "Base extension" # 描述
-    
-    # 核心方法
-    def execute(self, params: dict) -> dict:
-        raise NotImplementedError
-```
+找代码中强制维持的规则：唯一性检查、状态转移守卫、边界/参数校验、事务约束。每条不变量给出执行位置证据。
 
-**契约说明**：
+### Step 4：定位扩展点
 
-```
-BaseExtension 契约：
-- 必须实现：execute(params) → dict
-- 必须定义：name, version, description
-- 约束：name 唯一、description 清晰（用于注册/发现）
-```
+框架留给使用者的挂点：注册表/工厂、插件发现机制、钩子/中间件接口、配置驱动的策略选择。写明"从哪个文件开始照抄哪个现成实现"。
 
-### Step 3：构建概念关系
+### Step 5：类比理解（辅助，不是证据）
 
-根据项目类型调整关系图：
+为每个核心概念配一句现实类比（如消息路由 ≈ 邮局分拣、插件注册 ≈ 电器插座），帮助建立直觉。类比表格必须同时给出代码位置；类比与代码行为冲突时以代码为准并说明差异。
 
-```
-# 通用关系模板（根据项目类型调整）：
+### Step 6：按需生成类图/状态图
 
-[核心入口] ──→ [处理层] ──→ [输出层]
-    │             │             │
-    │             │             └──→ [辅助组件]
-    │             │
-    │             └──→ [可替换实现]
-    │
-    └──→ [多种实现方式]
+| 角色 | 触发条件 | Mermaid 形式 |
+| --- | --- | --- |
+| `domain_model` | ≥3 个核心类型之间存在真实的继承/组合/关联关系 | `classDiagram` |
+| `lifecycle` | 某真实实体有 ≥3 个**有证据的**状态与转移（状态守卫/持久化/事件） | `stateDiagram-v2` |
 
-# 常见项目类型的关系图示例：
+- **枚举本身不构成状态机**；只有当代码里存在围绕状态的转移逻辑与守卫时才画 lifecycle。
+- 类图只含核心接口/基类、代表性实现、中心实体、重要签名与有意义关系，不做全量类清单。
+- 状态图包含转移触发条件、关键守卫、副作用/持久化、失败转移与终态。
+- 不满足触发条件就不画，也不必登记 not_applicable（这两个角色是"按需"而非"必须交代"）。
+- 块格式、图后五要素与 manifest 登记遵循 Diagram contract。
 
-# Web 应用：
-Router ──→ Controller ──→ Service ──→ Database
-  │           │            │
-  │           └──→ Middleware ──→ 日志/认证/缓存
-  └──→ API 端点定义
+### Step 7：写入章节
 
-# 消息系统：
-Producer ──→ Broker ──→ Consumer
-  │            │            │
-  └──→ 消息发送   └──→ 路由/过滤  └──→ 消息处理
-
-# CLI 工具：
-CLI Parser ──→ Command Registry ──→ Command Handler
-      │                   │                    │
-      └──→ 参数解析        └──→ 命令注册          └──→ 执行逻辑
-```
-
-### Step 4：用类比帮助理解
-
-将项目抽象映射到现实类比：
-
-```python
-# 示例（Agent 框架）：
-def run(self, query, context):
-    # 1. 解析请求
-    resolved = self.resolve_agent(context)
-    # 2. 构建上下文
-    ctx = self.build_context(query, context)
-    # 3. 执行主逻辑
-    result = self.execute_loop(resolved, ctx)
-    return result
-```
-
-**类比：餐厅点餐系统**
-
-```
-1. 顾客点餐（系统接收查询）
-2. 厨师看菜谱（Agent 加载配置）
-3. 需要切菜？→ 调用切菜工具（Tool Call）
-4. 菜切好了？→ 继续做下一道（Loop）
-5. 菜做好了？→ 上菜（Return）
-6. 做了 30 道菜还没好？→ 放弃重试（max_steps）
-```
-
-> **通用化提示**：
-> - Web 应用：餐厅点餐（请求→处理→响应）
-> - 消息队列：邮局分拣（消息路由）
-> - 编译器：翻译官（代码→中间表示→机器码）
-> - 数据库：档案管理员（查询→检索→返回）
-
-### Step 5：生成 core-concepts.md
-
-结构：
+生成 `project-book/05-core-concepts.md`，结构（占位符交付前必须全部替换）：
 
 ```markdown
 # 核心概念
 
 ## 关键抽象
-
-### [抽象名称]
-- 是什么：[一句话描述]
-- 类比：[现实类比]
-- 位置：[文件路径:行号]
-- 契约：
-  - 必须实现：[方法名列表]
-  - 数据格式：[输入/输出类型]
-- 为什么这样设计：[设计意图]
-
-### [第二个抽象]
-...
+每个抽象：是什么（一句话）→ 真实签名摘录 → 位置 `文件:行号` → 已知实现 → 为什么这样设计（静态推断）。
 
 ## 设计契约
+每个契约：必须实现/约定/例外 + 证据。
 
-### [契约名称]
-- 输入：[参数说明]
-- 输出：[返回值]
-- 约束：[注意事项]
-- 扩展点：[如何覆盖/扩展]
-- 位置：[文件路径]
+## 不变量
+每条：规则 → 强制执行位置。
 
-## 概念关系图
-[Mermaid 关系图，根据实际项目类型生成]
+## 扩展点
+每个：挂点位置 → 参考现成实现 → 注册方式。
+
+## 领域模型类图（满足触发条件时）
+## 生命周期状态图（满足触发条件时）
 
 ## 类比理解
-| 概念 | 代码位置 | 现实类比 |
-|------|---------|---------|
-| [概念 1] | [路径] | [类比] |
-| [概念 2] | [路径] | [类比] |
+| 概念 | 代码位置 | 现实类比 | 类比局限 |
 ```
 
----
+更新 manifest：本章 `chapter_sources`、`diagrams` 条目（如有）。
 
 ## 输出物
 
 - `project-book/05-core-concepts.md`
 
----
-
 ## 质量检查
 
 ```
-✓ 概念是否用"是什么 + 类比"解释？
-✓ 契约是否标注了"必须做"和"可选做"？
-✓ 概念关系图是否清晰？
-✓ 类比是否帮助理解而非混淆？
-✓ 是否标注了代码位置（方便深挖）？
-✓ 是否适配了项目类型（Web/CLI/Agent/...）？
+✓ 每个概念是否都能在源码中搜到（真实签名 + 行号），而非示例模板？
+✓ 契约是否区分了"必须实现"与"可选行为"？
+✓ 类图/状态图是否只在触发条件满足时生成，且已登记 manifest？
+✓ 状态图是否基于真实转移逻辑（枚举不算状态机）？
+✓ 类比是否同时给出代码位置与类比局限？
+✓ 是否无占位符残留？
 ```
-
----
 
 ## 参考
 
-- 认知科学中的"类比学习"理论
-- 你的"项目学习 Skill"中的"概念提取"缺失环节
+- [../references/diagram-contract.md](../references/diagram-contract.md)
+- [../references/evidence-and-safety.md](../references/evidence-and-safety.md)

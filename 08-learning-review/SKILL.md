@@ -1,259 +1,93 @@
 ---
 name: 08-learning-review
-description: 验证学习完整性，生成学习检查清单和 FAQ，查漏补缺
+description: 生成 project-book/09-faq.md 与 10-learning-checklist.md，汇总 manifest，并强制运行 validate_book.py 作为完成门禁（PASS 才算学习完成）
 ---
 
-# 08-Learning Review — 学习检查
+# 08-Learning Review — 学习检查（完成门禁）
 
-> 目标：验证学习完整性，生成检查清单，查漏补缺
+> 目标：语义查缺补漏 + 确定性校验双管齐下；教材只有在 `validate_book.py` 输出 PASS 后才算完成。
 
----
-
-## 职责
-
-- 检查是否完成核心学习目标
-- 生成学习检查清单
-- 识别知识盲区
-- 提供下一步学习建议
-
----
+必读：[../references/output-contract.md](../references/output-contract.md)、[../references/evidence-and-safety.md](../references/evidence-and-safety.md)、[../references/diagram-contract.md](../references/diagram-contract.md)（校验图表登记时对照）。
 
 ## 执行流程
 
-### Step 1：核对核心目标
+### Step 1：语义审阅全部章节
 
-根据项目类型，检查是否掌握：
+通读 `project-book/01`–`08` 与 manifest，做交叉一致性检查：
+- 章节间引用是否成立（04 的链路是否用上 03 的模块名、06 的导航是否指向真实存在的文件）；
+- 证据是否充足（结论有无 `文件:行号`、分级标注是否正确）；
+- 图表是否与正文一致（节点/边能否在源码中找到对应）。
 
-**逻辑伪代码（供 Agent 参考执行）**：
+### Step 2：识别知识盲区
 
-```
-if project_type == "消息中间件":
-    checks = [
-        "能说清消息从哪来、到哪去",
-        "能画出消息流图",
-        "知道通道如何注册",
-        "知道路由逻辑在哪",
-        "知道消费者如何消费",
-    ]
-elif project_type == "Web 应用":
-    checks = [
-        "能说清 HTTP 请求完整路径",
-        "知道路由注册在哪",
-        "知道控制器逻辑",
-        "知道数据库操作",
-        "知道中间件链",
-    ]
-elif project_type == "CLI 工具":
-    checks = [
-        "知道命令注册机制",
-        "知道参数解析流程",
-        "知道命令执行链路",
-        "知道帮助文档如何生成",
-    ]
-elif project_type == "Agent 框架":
-    checks = [
-        "能描述 Agent 规划循环",
-        "知道工具如何调用",
-        "知道记忆系统",
-        "知道扩展点",
-    ]
-elif project_type == "库/框架":
-    checks = [
-        "知道 API 文档位置",
-        "知道核心类关系",
-        "知道如何集成到现有项目",
-        "知道常见使用模式",
-    ]
-elif project_type == "数据库/存储":
-    checks = [
-        "知道查询解析流程",
-        "知道存储引擎",
-        "知道事务机制",
-        "知道索引原理",
-    ]
+把 01 章清单中的模块/manifest 与 03–05 章已分析内容对比，列出未覆盖的机制（如配置热更新、认证、错误处理、测试策略、某子项目）。盲区靠语义对比得出，每条给出建议的补课入口文件。
 
-# 通用检查（所有项目类型）
-checks.extend([
-    "能用一句话说明项目是什么",
-    "知道核心目录职责",
-    "知道怎么启动项目",
-    "知道怎么扩展（根据项目类型确定扩展方式）",
-])
-```
+### Step 3：生成 09-faq.md
 
-### Step 2：检查产出物完整性
-
-**逻辑伪代码（供 Agent 参考执行）**：
-
-```
-expected_outputs = [
-    "01-project-overview.md",
-    "02-installation.md",
-    "03-architecture.md",
-    "04-core-flow.md",
-    "05-core-concepts.md",
-    "06-source-code-guide.md",
-    "07-extension-guide.md",
-    "08-examples.md",
-]
-
-# Agent 需要检查：
-for output in expected_outputs:
-    if 文件不存在:
-        标记为缺失
-```
-
-### Step 3：识别知识盲区
-
-检查是否有未覆盖的模块：
-
-**逻辑伪代码（供 Agent 参考执行）**：
-
-```
-blind_spots = []
-
-# 检查分析文档中是否覆盖以下内容：
-if "config" not in 已分析的模块:
-    blind_spots.append("配置系统工作原理")
-
-if "plugin" not in 已分析的模块:
-    blind_spots.append("插件/中间件机制")
-
-if "error_handling" not in 已分析的模块:
-    blind_spots.append("异常处理路径")
-
-if "testing" not in 已分析的模块:
-    blind_spots.append("测试覆盖范围")
-
-# 根据项目类型补充特定盲区
-if project_type == "Web 应用":
-    if "middleware" not in 已分析的模块:
-        blind_spots.append("中间件链")
-    if "auth" not in 已分析的模块:
-        blind_spots.append("认证授权机制")
-
-if project_type == "Agent 框架":
-    if "tool" not in 已分析的模块:
-        blind_spots.append("工具调用机制")
-    if "memory" not in 已分析的模块:
-        blind_spots.append("记忆系统")
-```
-
-**Agent 需要执行的实际操作**：
-
-```bash
-# 检查配置系统分析
-grep -ri "config\|配置" project-book/03-architecture.md project-book/01-project-overview.md
-
-# 检查插件/中间件分析
-grep -ri "plugin\|中间件\|middleware" project-book/03-architecture.md
-
-# 检查异常处理分析
-grep -ri "error\|exception\|异常\|错误" project-book/04-core-flow.md
-
-# 检查测试覆盖分析
-grep -ri "test\|测试" project-book/01-project-overview.md project-book/03-architecture.md
-```
-
-### Step 4：生成学习检查清单
-
-结构：
-
-```markdown
-# 学习检查清单
-
-## 核心目标完成度
-
-### 项目理解
-- [ ] 能用一句话说明项目是什么
-- [ ] 知道项目类型：[类型]
-- [ ] 知道核心技术栈
-
-### 架构理解
-- [ ] 能画出数据流图
-- [ ] 知道核心模块职责
-- [ ] 知道模块间依赖关系
-
-### 核心链路
-- [ ] 能描述"输入 → 处理 → 输出"完整路径
-- [ ] 知道路由/分发逻辑
-- [ ] 知道核心算法/循环流程
-
-### 扩展开发
-- [ ] 知道怎么添加[扩展类型 1]
-- [ ] 知道怎么添加[扩展类型 2]
-- [ ] 知道怎么写[扩展类型 3]
-
-### 配置系统
-- [ ] 知道配置加载流程
-- [ ] 知道如何修改配置
-
-## 产出物检查
-
-- [ ] 01-project-overview.md ✓
-- [ ] 02-installation.md ✓
-- [ ] 03-architecture.md ✓
-- [ ] 04-core-flow.md ✓
-- [ ] 05-core-concepts.md ✓
-- [ ] 06-source-code-guide.md ✓
-- [ ] 07-extension-guide.md ✓
-- [ ] 08-examples.md ✓
-
-## 知识盲区
-
-| 盲区 | 建议 | 相关文件 |
-|------|------|---------|
-| 配置系统 | 深入阅读 config.py/config.json | [路径] |
-| 插件系统 | 读 [最简单插件] 源码 | [路径] |
-| 异常处理 | 检查 try-except 链 | [路径] |
-
-## 下一步学习建议
-
-1. [深入某个模块]
-2. [尝试修改一个小功能]
-3. [读测试代码了解正确行为]
-4. [贡献 PR 或写自己的扩展]
-```
-
-### Step 5：生成 FAQ
-
-基于知识盲区，生成常见问题：
+问题必须来自**真实缺口**：架构疑问、安装坑、校验失败暴露的问题、盲区。禁止编造泛泛问题。
 
 ```markdown
 # 常见问题
 
-## Q: 这个项目的配置系统怎么工作？
-A: [简要说明]
-
-## Q: 怎么添加[扩展类型]？
-A: [步骤说明]
-
-## Q: 核心数据流是怎样的？
-A: [简要说明]
+每个问题：Q（具体场景）→ A（结论 + 证据 `文件:行号`）→ 相关章节链接。
 ```
 
----
+### Step 4：生成 10-learning-checklist.md
+
+```markdown
+# 学习检查清单
+
+## 语义覆盖矩阵
+| 学习目标 | 对应章节 | 覆盖状态 | 缺口/备注 |
+（目标含：一句话定位、模块边界、核心链路、契约与扩展点、配置系统、部署形态）
+
+## 验证结果汇总
+validate_book.py 的最终输出（PASS/FAIL 历史）、manifest validation 各项状态、已运行/静态验证/未运行清单。
+
+## 已知未知
+盲区清单 + 每条的补课入口文件。
+
+## 练习任务
+3–5 个动手任务（读某文件回答某问题 / 跑某示例 / 做某小扩展），由浅入深。
+```
+
+### Step 5：汇总 manifest
+
+补全/核对顶层字段：`schema_version: 2`、`repo_root`、`head_sha`、`generated_at`、`mode`、`targets`、`subprojects`、`project_types`、`entrypoints`、`chapter_sources`（覆盖全部十章）、`diagrams`、`validation`（paths/markdown/placeholders/secrets/diagrams/examples 六项，每项 status 合法；`failed` 不允许留在最终 manifest 中）。targeted 模式核对 `preservation` 快照存在且未在写入后刷新。
+
+### Step 6：运行完成门禁（硬性）
+
+```bash
+python <skill_root>/scripts/validate_book.py <repo> --mode <full|fast|targeted>
+# targeted 模式对每个目标章节追加 --target <chapter>
+```
+
+- 输出 **PASS** → 学习完成，把结果写入 10 章"验证结果汇总"。
+- 输出 **FAIL** → 逐条阅读 ERROR：定位其所属章节与生成阶段（如证据路径失效→对应分析阶段；图表未登记→03/04/05；占位符→对应写作阶段；manifest 缺字段→本阶段），修复后**重跑校验**，循环直到 PASS。不允许带 FAIL 交付。
+- WARNING（如示例未运行验证）如实记入 10 章，不得隐瞒或改写成"已验证"。
+
+### Step 7：增量更新场景（已有教材时）
+
+按 evidence-and-safety 的增量规则：先查 Git status 与现有 manifest；manifest HEAD 与当前不一致时用 `git diff --name-only <old>..<new>` 取变更清单（排除 `project-book/` 自身），经 `chapter_sources` 映射到受影响章节做 targeted 更新；无法区分生成文本与用户手写文本时，停下来询问，不得覆盖。
 
 ## 输出物
 
 - `project-book/09-faq.md`
 - `project-book/10-learning-checklist.md`
-
----
+- 完整 manifest + `validate_book.py` PASS
 
 ## 质量检查
 
 ```
-✓ 检查清单是否覆盖核心学习目标？
-✓ 是否识别了知识盲区？
-✓ 是否有具体的下一步建议？
-✓ FAQ 是否针对实际盲区？
-✓ 检查清单是否适配了项目类型？
+✓ 门禁是否真实运行且最终 PASS（命令与输出已记入 10 章）？
+✓ FAQ 是否全部来自真实缺口（每条有证据或指向章节）？
+✓ 覆盖矩阵是否对照过 01 章清单，而非凭印象打勾？
+✓ manifest 六个 validation 子项是否状态合法且无 failed 残留？
+✓ targeted 模式下 preservation 快照是否未被写入后刷新？
+✓ WARNING 是否如实呈现？
 ```
-
----
 
 ## 参考
 
-- 你的"项目学习 Skill"中的检查清单章节
-- 认知科学中的"元认知"（对学习的思考）
+- [../references/output-contract.md](../references/output-contract.md)
+- [../references/evidence-and-safety.md](../references/evidence-and-safety.md)

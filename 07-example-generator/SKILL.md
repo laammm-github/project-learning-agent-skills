@@ -1,255 +1,93 @@
 ---
 name: 07-example-generator
-description: 生成最小可运行示例和扩展模板，验证学习成果
+description: 生成项目原生的示意示例与可运行示例，逐一标注验证状态，生成 project-book/08-examples.md 并写入 manifest validation.examples
 ---
 
 # 07-Example Generator — 示例生成
 
-> 目标：生成最小可运行示例和扩展模板
+> 目标：用最小的真实代码验证学习成果——读者复制、替换少量值、就能跑（或明确知道哪些只是示意）。
 
----
+必读：[../references/output-contract.md](../references/output-contract.md)、[../references/evidence-and-safety.md](../references/evidence-and-safety.md)（"Safe execution"与示例验证规则）。
 
-## 职责
+## 硬性规则
 
-输出：
-- 完整扩展模板（可直接复制使用）
-- 多语言示例（Python/Java/Go/TS 等）
-- 配置示例（常见场景）
-- FAQ 式解决方案
-
-**与 06-tutorial-writer 的区别**：
-- 06-tutorial-writer 负责：步骤说明、最小示例、注册位置
-- 07-example-generator 负责：完整模板代码、多语言变体、配置示例
-
----
+1. **项目原生**：示例必须调用目标仓库真实存在的 API/类/命令（来自 05 章扩展点与 06 章导航）。禁止套用任何外部项目的模式或想象出来的 API。
+2. **语言范围**：以项目主语言为主；只有当仓库本身就提供多语言客户端/示例时才补充其他语言。
+3. **验证状态逐例标注**（与 manifest 词汇一致）：
+   - `已运行`：本次实际执行成功，附完整命令与输出摘要；
+   - `静态验证`：通过了语法/类型级检查（附命令），或仅由源码证据支撑但未执行；
+   - `示意性伪代码`：帮助理解结构，**严禁声称为可运行**。
+4. **可运行示例的门槛**：不含任何未替换占位符，且至少通过语言原生语法/类型检查（如 `python -m py_compile`、`tsc --noEmit`、`go vet`）。
+5. **fast 模式**：至少 1 个示例达到 `静态验证` 以上并通过语法级检查，manifest `validation.examples` 记为 `passed`（含 `command`、`exit_code: 0`、`level`）。
+6. **执行边界**：运行示例若需安装依赖、启动容器或调用外部 API，须用户明确授权；否则只做语法级检查并标「未运行」+ 原因。
 
 ## 执行流程
 
-### Step 1：生成 Hello World 示例
+### Step 1：Hello World 示例（最小入口）
 
-从最简单的入口开始，替换 `[项目入口]` 为实际入口点：
+用项目的真实入口/公开 API 写最小可运行片段：初始化 → 一次核心调用 → 打印结果。所有导入路径、类名、函数名逐一与源码核对（`文件:行号`）。
 
-```python
-# 通用模板（根据项目类型调整）：
-# 文件：examples/hello_[项目类型].py
+### Step 2：扩展示例（对照真实扩展点）
 
-# Python 项目示例：
-from [入口模块] import [入口类]
+从 05 章扩展点中选 1–2 个，参照仓库内**现成最简实现**生成模板：
 
-app = [入口类]()
-app.startup()
-
-# 发送消息/触发处理
-result = app.process(
-    input_data="hello",
-    context={"type": "[项目类型]"}
-)
-
-print(f"结果：{result}")
+```text
+模板骨架（写作参考，交付时必须实例化为项目真实 API）：
+1. 继承/实现真实基类或接口（写明导入路径与基类位置证据）
+2. 实现契约要求的方法（逐个对照 05 章契约清单）
+3. 注册到真实注册表/工厂（写明注册位置证据）
+4. 触发与验证方式（项目现有的运行/测试命令）
 ```
 
-> **通用化提示**：
-> - Web 应用：启动 Flask/FastAPI 服务器 → cURL 测试
-> - CLI 工具：运行命令 → 查看输出
-> - 消息系统：发送消息 → 接收消息
-> - 库/框架：import 模块 → 调用函数
+### Step 3：配置示例（脱敏）
 
-### Step 2：生成扩展模板
+常见配置场景各一份（切换后端、启用某功能等），只用变量名与安全的示例值；任何疑似敏感值写 `<redacted>` 或 `your-value-here`。
 
-参考现有扩展，生成通用模板：
+### Step 4：验证并记录
 
-```python
-# 通用扩展模板（适用于大多数框架）：
-# 文件：examples/custom_extension.py
+- 对每个"可运行"声明的示例执行语法级检查，记录命令与退出码。
+- 写入 manifest：`validation.examples`（status/command/exit_code/level/reason）+ 本章 `chapter_sources`。
+- 未达验证门槛的示例一律降级标注为「示意性伪代码」。
 
-from [基类模块] import [BaseClass]
+### Step 5：写入章节
 
-class MyExtension([BaseClass]):
-    """自定义扩展模板"""
-    extension_type = "myextension"
-    supported_features = []
-    
-    def startup(self):
-        """初始化连接/资源"""
-        print(f"[{self.extension_type}] Started")
-    
-    def process(self, input_data):
-        """
-        核心处理逻辑
-        输入：input_data（类型由契约定义）
-        输出：result（类型由契约定义）
-        """
-        # 1. 验证输入
-        if not input_data:
-            return self._error("Empty input")
-        
-        # 2. 执行业务逻辑
-        result = self._do_work(input_data)
-        
-        # 3. 返回结果
-        return result
-    
-    def _do_work(self, data):
-        """具体的业务逻辑实现"""
-        # 替换为你的实际逻辑
-        return {"status": "ok", "data": data}
-    
-    def output(self, result):
-        """输出结果"""
-        print(f"[{self.extension_type}] Result: {result}")
-```
-
-```python
-# 工具/功能模板（适用于 Agent 框架或类似架构）：
-# 文件：examples/custom_tool.py
-
-from [工具基类] import [BaseTool], [ResultType]
-
-class MyTool([BaseTool]):
-    """自定义工具模板"""
-    name = "my_tool"
-    description = "My custom tool - [请替换描述]"
-    params = {
-        "type": "object",
-        "properties": {
-            "[参数名]": {
-                "type": "string",
-                "description": "[参数说明]"
-            }
-        },
-        "required": ["[参数名]"]
-    }
-    stage = [决策阶段]  # 如 PRE_PROCESS, RUN 等
-    
-    def execute(self, params: dict) -> [ResultType]:
-        action = params.get("[参数名]")
-        try:
-            # 实现工具逻辑
-            result = self._execute_action(action)
-            return [ResultType].success(result)
-        except Exception as e:
-            return [ResultType].error(str(e))
-    
-    def _execute_action(self, action):
-        """具体的工具逻辑"""
-        return f"Action {action} performed"
-```
-
-```python
-# 插件/中间件模板（适用于事件驱动架构）：
-# 文件：examples/custom_plugin.py
-
-from [注册模块] import register
-from [上下文模块] import ContextType
-from [回复模块] import Reply, ReplyType
-from [插件基类] import Plugin, Event, EventAction
-
-@register(
-    name="MyPlugin",
-    desire_priority=0,       # 优先级（数字越大越先执行）
-    hidden=False,            # 是否在插件列表可见
-    enabled=True,            # 默认是否启用
-    desc="[插件描述]",
-    version="0.1",
-    author="[作者名]",
-)
-class MyPlugin(Plugin):
-    def __init__(self):
-        super().__init__()
-        self.handlers[Event.ON_HANDLE_CONTEXT] = self.on_handle_context
-    
-    def on_handle_context(self, e_context: EventContext):
-        # 检查消息类型
-        if e_context["context"].type != ContextType.TEXT:
-            return
-        
-        # 处理消息
-        content = e_context["context"].content
-        # 替换为实际处理逻辑
-        if "[触发条件]" in content.lower():
-            reply = Reply()
-            reply.type = ReplyType.TEXT
-            reply.content = f"[响应内容]"
-            e_context["reply"] = reply
-            e_context.action = EventAction.BREAK_PASS
-    
-    def get_help_text(self, **kwargs):
-        return "[帮助文本]"
-```
-
-### Step 3：生成配置示例
-
-```json
-{
-  // 示例 1：切换组件/模型/后端
-  "[组件名]": "[组件标识]",
-  
-  // 示例 2：多组件/多通道
-  "[组件类型]": "[组件 1],[组件 2]",
-  
-  // 示例 3：多实例/多工作区
-  "[实例名]": [
-    {"id": "default", "name": "Default", "workspace": "~/[项目]"},
-    {"id": "custom", "name": "Custom", "workspace": "~/[项目]-custom"}
-  ]
-}
-```
-
-> **通用化提示**：
-> - Web 应用：端口、数据库连接、认证方式
-> - CLI 工具：颜色、格式、输出目录
-> - 消息系统：Broker URL、Topic 名称、消费组
-> - Agent 框架：Model、Tools、Channels
-
-### Step 4：生成 examples.md
-
-结构：
+生成 `project-book/08-examples.md`，结构（占位符交付前必须全部替换）：
 
 ```markdown
-# 示例与模板
+# 示例集
+
+## 示例索引
+| 示例 | 类型（可运行/示意） | 验证状态 | 验证命令 |
+| --- | --- | --- | --- |
 
 ## Hello World
-[最小可运行示例]
+完整代码 + 运行方式 + 预期输出 + 证据（调用的 API 位置）。
 
-## [扩展类型 1]
-[模板代码 + 注册说明]
+## 扩展模板（每个扩展点一节）
+完整代码 + 注册步骤 + 测试方式 + 对照的现成实现路径。
 
-## [扩展类型 2]
-[模板代码 + 注册说明]
+## 配置示例（脱敏）
 
-## [扩展类型 3]
-[模板代码 + 注册说明]
-
-## 配置示例
-[常用配置场景]
-
-## 常见问题
-[FAQ 式示例]
+## FAQ 式排错
+示例跑不起来时的常见原因（来自真实报错处理代码/文档）。
 ```
-
----
 
 ## 输出物
 
 - `project-book/08-examples.md`
-- `examples/` 目录（可选，存放完整示例文件）
-
----
+- manifest `validation.examples` 条目
 
 ## 质量检查
 
 ```
-✓ Hello World 示例是否真的"最小可运行"？
-✓ 模板代码是否可以直接复制使用？
-✓ 注册步骤是否清晰（改哪些文件）？
-✓ 配置示例是否覆盖常见场景？
-✓ 模板是否通用化（不绑定特定项目类型）？
-✓ 是否标注了需要替换的占位符？
+✓ 每个示例调用的 API 是否都在源码中核实过（file:line）？
+✓ 是否每个示例都有验证状态标注，且示意性示例没有被称为可运行？
+✓ 可运行示例是否零占位符并附语法检查命令与结果？
+✓ fast 模式下 validation.examples 是否为 passed（command + exit_code 0 + level）？
+✓ 配置示例是否无任何敏感值？
 ```
-
----
 
 ## 参考
 
-- 你的"项目学习 Skill"中的"扩展开发指南"
-- Supabase Agent Skills 工程组织方式
+- [../references/evidence-and-safety.md](../references/evidence-and-safety.md)
+- [../references/output-contract.md](../references/output-contract.md)
