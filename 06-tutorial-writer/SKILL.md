@@ -15,7 +15,7 @@ description: 基于 project-book/01–05 的分析数据（只读），生成目
 - **输出**：仅 `project-book/06-source-code-guide.md` 与 `project-book/07-extension-guide.md` 两个文件。
 - **不得改写 01–05 的任何字节**（targeted 模式下这由 manifest `preservation` 快照强制校验）。
 - 不存在 `docs/analysis/` 之类的中间目录；一切输入输出都在 `project-book/` 内。
-- 若发现 01–05 有错误或过期结论：不要就地修改，记录到章节"已知问题"并交由编排器调度对应阶段（targeted 模式）修正。
+- 若发现 01–05 有错误或过期结论：不要就地修改，记录到 06 章末尾的"已知问题"小节，并交由编排器调度对应阶段（targeted 模式）修正。
 
 ## 执行流程
 
@@ -45,6 +45,9 @@ description: 基于 project-book/01–05 的分析数据（只读），生成目
 
 ## 深入某模块的推荐阅读序
 先读最简实现，再对比复杂实现；先读基类，再读具体子类。
+
+## 已知问题（无则写"无"）
+01–05 中发现的过期/错误结论，逐条列出并说明应由哪个阶段修正。
 ```
 
 ### Step 3：生成 07-extension-guide.md（扩展开发指南）

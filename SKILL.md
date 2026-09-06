@@ -5,7 +5,7 @@ description: 当用户要求学习/理解一个陌生代码仓库、生成或增
 
 # Project Learning Agent（编排器）
 
-把陌生代码仓库转化为可追溯、可验证的十章项目教材（`project-book/`）。本技能是编排器：负责选定模式、按序调度 8 个子技能、执行统一契约与完成门禁。核心纪律：**每个结论回指仓库内真实的 `文件:行号`；未执行的命令与静态推断必须显式标注。**
+把陌生代码仓库转化为可追溯、可验证的十章项目教材（`project-book/`）。本技能是编排器：负责选定模式、按序调度 8 个子技能、执行统一契约与完成门禁。全文约定：`<skill_root>` 指本技能安装目录（本 SKILL.md 所在目录），`<repo>` 指被学习的目标仓库根目录；脚本命令一律带 `<skill_root>` 前缀，因为运行时工作目录通常是目标仓库。核心纪律：**每个结论回指仓库内真实的 `文件:行号`；未执行的命令与静态推断必须显式标注。**
 
 ## 一、必读契约
 
@@ -23,7 +23,7 @@ description: 当用户要求学习/理解一个陌生代码仓库、生成或增
 | --- | --- | --- |
 | `full` | 第一次完整学习仓库 | 十章 + manifest；必须交代 `system_structure`、`runtime_deployment`、`core_flow` 三个图表角色（不适用时在 manifest 记 `not_applicable` 并给出具体理由） |
 | `fast` | 快速建立项目地图 | 仍生成十章，但每章只保留主要子系统所需证据；必须交代 `system_structure` 与 `core_flow`；实际图表通常不超过 2 张；至少 1 条核心链路和 1 个通过语法级验证的示例（manifest `validation.examples.status = passed`） |
-| `targeted` | 只更新指定章节/主题 | 仅写目标章节；**任何写入前**必须运行 `python scripts/validate_book.py <repo> --snapshot` 并把结果存入 manifest `preservation` 字段；无关章节的字节与时间戳保持不变；不创建空占位章节 |
+| `targeted` | 只更新指定章节/主题 | 仅写目标章节；**任何写入前**必须运行 `python <skill_root>/scripts/validate_book.py <repo> --snapshot` 并把结果存入 manifest `preservation` 字段；无关章节的字节与时间戳保持不变；不创建空占位章节 |
 
 模式判定：用户未指定时，仓库尚无 `project-book/` 用 `full`；已有教材且用户只关心特定主题用 `targeted`；用户要求"快速了解"用 `fast`。
 
@@ -81,7 +81,7 @@ python <skill_root>/scripts/inventory_repo.py <repo>
 3. **安全**：默认只做静态分析；安装依赖、启动容器、迁移、外部 API 调用需用户明确授权；只输出配置变量名与非敏感默认值，严禁输出真实密钥值。
 4. **占位符**：交付章节中不得残留任何 `[占位符]` 样式文本（校验器会直接拒绝）。
 5. **图表**：只使用 diagram-contract 定义的 Mermaid 块格式并登记 manifest；每图回答一个学习问题，≤12 节点、≤18 边；节点用真实源码名，禁止虚构通用分层。
-6. **门禁**：结束前必须运行 `python scripts/validate_book.py <repo> --mode <mode>`（targeted 追加 `--target`），输出 PASS 才算完成；FAIL 时回到对应阶段修复后重跑。
+6. **门禁**：结束前必须运行 `python <skill_root>/scripts/validate_book.py <repo> --mode <mode>`（targeted 追加 `--target`），输出 PASS 才算完成；FAIL 时回到对应阶段修复后重跑。
 
 ## 七、最终产物
 

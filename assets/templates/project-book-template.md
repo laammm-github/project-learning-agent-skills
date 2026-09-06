@@ -56,7 +56,7 @@ project-book/
 
 ```
 ✓ 十章 + .learning-manifest.json 是否齐全且非空？
-✓ python scripts/validate_book.py <repo> --mode <mode> 是否输出 PASS（硬门禁）？
+✓ python <skill_root>/scripts/validate_book.py <repo> --mode <mode> 是否输出 PASS（硬门禁）？
 ✓ 每章是否至少一条内联证据（路径:行号），且引用文件已登记 chapter_sources？
 ✓ 图表是否全部按契约登记（无未注册 Mermaid 块、无失效登记）？
 ✓ 是否无占位符残留（形如 [项目名]、[路径] 的文本）？

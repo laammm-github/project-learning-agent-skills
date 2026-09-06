@@ -29,7 +29,7 @@ description: 分析安装步骤、配置加载优先级与环境变量名（不�
 ### Step 1：识别配置系统
 
 ```bash
-rg -n "\.env|config|settings" --glob "*.{py,ts,js,go,rs,java}" -l
+rg -l "\.env|config|settings" --glob "*.{py,ts,js,go,rs,java}"
 rg --files -g ".env.example" -g "*.toml" -g "*.yaml" -g "docker-compose*"
 ```
 
