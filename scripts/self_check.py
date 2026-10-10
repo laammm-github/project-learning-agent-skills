@@ -33,10 +33,10 @@ def structural_errors() -> list[str]:
         *(Path(name) / "SKILL.md" for name in core_names),
         Path("extensions/guided-practice/SKILL.md"),
     }
-    actual = {path.relative_to(SKILL_ROOT) for path in skill_files}
-    for missing in sorted(expected - actual):
+    present = {path.relative_to(SKILL_ROOT) for path in skill_files}
+    for missing in sorted(expected - present):
         errors.append(f"missing SKILL.md: {missing.as_posix()}")
-    for extra in sorted(actual - expected):
+    for extra in sorted(present - expected):
         errors.append(f"unexpected SKILL.md: {extra.as_posix()}")
 
     for skill_file in skill_files:

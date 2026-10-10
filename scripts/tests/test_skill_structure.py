@@ -37,11 +37,12 @@ class SkillStructureTests(unittest.TestCase):
             (checkout / "extensions" / "guided-practice" / "SKILL.md").unlink()
             unexpected = checkout / "extensions" / "unrelated" / "SKILL.md"
             unexpected.parent.mkdir(parents=True)
-            unexpected.write_text("---\\nname: unrelated\\ndescription: test\\n---\\n", encoding="utf-8")
+            unexpected.write_text("\n".join(["---", "name: unrelated", "description: test", "---", ""]), encoding="utf-8")
             with mock.patch.object(self_check, "SKILL_ROOT", checkout):
                 issues = self_check.structural_errors()
             self.assertIn("missing SKILL.md: extensions/guided-practice/SKILL.md", issues)
             self.assertIn("unexpected SKILL.md: extensions/unrelated/SKILL.md", issues)
+            self.assertFalse(any("missing YAML frontmatter" in issue for issue in issues), issues)
 
     def test_all_eight_core_skill_names_remain_present(self):
         for i, name in enumerate(
