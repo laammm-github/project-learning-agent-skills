@@ -21,6 +21,10 @@ Create trustworthy learning material from the repository as it exists now. Prese
 
 Record the selected mode and targets in `project-book/.learning-manifest.json`.
 
+## Optional guided practice
+
+When the user **explicitly** requests hands-on exercises, a learning plan, or a knowledge check, consult [guided-practice](extensions/guided-practice/SKILL.md) after the relevant learning chapters are available. It uses the existing ten-chapter book as evidence, guides learning in conversation by default, and does **not** add a ninth core child skill or run in ordinary documentation modes.
+
 ## Phase 00: preflight
 
 Before analysis or writes:

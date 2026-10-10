@@ -18,8 +18,10 @@ LOCAL_LINK_RE = re.compile(r"\[[^\]]+\]\((?!https?://|#)([^)]+)\)")
 def structural_errors() -> list[str]:
     errors: list[str] = []
     skill_files = sorted(SKILL_ROOT.rglob("SKILL.md"))
-    if len(skill_files) != 9:
-        errors.append(f"expected root plus eight child SKILL.md files, found {len(skill_files)}")
+    if len(skill_files) != 10:
+        errors.append(
+            f"expected root, eight core children, and guided-practice SKILL.md files, found {len(skill_files)}"
+        )
 
     for skill_file in skill_files:
         text = skill_file.read_text(encoding="utf-8-sig")
@@ -28,7 +30,7 @@ def structural_errors() -> list[str]:
             errors.append(f"missing YAML frontmatter: {skill_file.relative_to(SKILL_ROOT)}")
             continue
         name_match = NAME_RE.search(frontmatter.group(1))
-        expected_name = SKILL_ROOT.name if skill_file.parent == SKILL_ROOT else skill_file.parent.name
+        expected_name = "project-learning-agent" if skill_file.parent == SKILL_ROOT else skill_file.parent.name
         if not name_match or name_match.group(1) != expected_name:
             actual = name_match.group(1) if name_match else None
             errors.append(f"skill name mismatch in {skill_file}: {actual!r} != {expected_name!r}")
