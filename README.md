@@ -116,7 +116,7 @@ python scripts/self_check.py
 python scripts/self_check.py
 ```
 
-当前测试覆盖 Monorepo、空格路径、Windows 路径、无 Git、缺少 `rg`、损坏 Markdown、失效证据、占位符、敏感信息、fast 模式约束、targeted 模式保留以及 book-only Git 提交等场景。
+当前测试覆盖 Monorepo、空格路径、Windows 路径、无 Git、缺少 `rg`、损坏 Markdown、失效证据、占位符、敏感信息、fast 模式约束、targeted 模式保留以及 book-only Git 提交等场景。也覆盖八个核心子技能与可选扩展的路径完整性、目录名无关性及缺失/意外技能检测。
 
 ## 设计边界
 

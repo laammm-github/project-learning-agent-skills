@@ -18,10 +18,26 @@ LOCAL_LINK_RE = re.compile(r"\[[^\]]+\]\((?!https?://|#)([^)]+)\)")
 def structural_errors() -> list[str]:
     errors: list[str] = []
     skill_files = sorted(SKILL_ROOT.rglob("SKILL.md"))
-    if len(skill_files) != 10:
-        errors.append(
-            f"expected root, eight core children, and guided-practice SKILL.md files, found {len(skill_files)}"
-        )
+    core_names = (
+        "01-repo-discovery",
+        "02-config-and-installation",
+        "03-architecture-analysis",
+        "04-code-flow-analysis",
+        "05-concept-extraction",
+        "06-tutorial-writer",
+        "07-example-generator",
+        "08-learning-review",
+    )
+    expected = {
+        Path("SKILL.md"),
+        *(Path(name) / "SKILL.md" for name in core_names),
+        Path("extensions/guided-practice/SKILL.md"),
+    }
+    actual = {path.relative_to(SKILL_ROOT) for path in skill_files}
+    for missing in sorted(expected - actual):
+        errors.append(f"missing SKILL.md: {missing.as_posix()}")
+    for extra in sorted(actual - expected):
+        errors.append(f"unexpected SKILL.md: {extra.as_posix()}")
 
     for skill_file in skill_files:
         text = skill_file.read_text(encoding="utf-8-sig")

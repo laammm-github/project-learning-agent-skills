@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import importlib.util
+import shutil
 import sys
+import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -19,6 +22,26 @@ SPEC.loader.exec_module(self_check)
 class SkillStructureTests(unittest.TestCase):
     def test_skill_structure_is_valid_independent_of_checkout_folder(self):
         self.assertEqual(self_check.structural_errors(), [])
+        with tempfile.TemporaryDirectory(prefix="arbitrary-checkout-") as directory:
+            checkout = Path(directory) / "different-folder-name"
+            shutil.copytree(
+                ROOT, checkout, ignore=shutil.ignore_patterns(".git", "__pycache__", ".pytest_cache")
+            )
+            with mock.patch.object(self_check, "SKILL_ROOT", checkout):
+                self.assertEqual(self_check.structural_errors(), [])
+
+    def test_missing_guided_practice_cannot_hide_behind_total_skill_count(self):
+        with tempfile.TemporaryDirectory() as directory:
+            checkout = Path(directory) / "checkout"
+            shutil.copytree(ROOT, checkout, ignore=shutil.ignore_patterns(".git", "__pycache__"))
+            (checkout / "extensions" / "guided-practice" / "SKILL.md").unlink()
+            unexpected = checkout / "extensions" / "unrelated" / "SKILL.md"
+            unexpected.parent.mkdir(parents=True)
+            unexpected.write_text("---\\nname: unrelated\\ndescription: test\\n---\\n", encoding="utf-8")
+            with mock.patch.object(self_check, "SKILL_ROOT", checkout):
+                issues = self_check.structural_errors()
+            self.assertIn("missing SKILL.md: extensions/guided-practice/SKILL.md", issues)
+            self.assertIn("unexpected SKILL.md: extensions/unrelated/SKILL.md", issues)
 
     def test_all_eight_core_skill_names_remain_present(self):
         for i, name in enumerate(
